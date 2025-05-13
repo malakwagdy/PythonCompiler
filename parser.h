@@ -314,6 +314,7 @@ public:
     std::string toString(int indent = 0) const override;
 };
 
+
 // The Parser class
 class Parser {
 private:
@@ -330,9 +331,12 @@ private:
     bool check(TokenType type);
     bool check(const std::string& lexeme);
     bool isAtEnd();
+    bool isBuiltInFunction(const std::string& name); // Add this line
     void synchronize();
     void error(const std::string& message, int line, int column);
-    
+
+    // Recursive descent parsing methods
+    // ...rest of the code
     // Recursive descent parsing methods
     std::shared_ptr<ProgramNode> parseProgram();
     std::shared_ptr<StatementListNode> parseStatementList();
@@ -372,7 +376,8 @@ public:
     std::shared_ptr<ProgramNode> parse();
     void printParseTree(std::shared_ptr<ASTNode> root, int indent = 0);
     void printErrors();
-    bool hasError() { return has_error; }
+    bool hasError() const { return !errors.empty(); }
+    const std::vector<std::string>& getErrors() const { return errors; }
 };
 
 #endif // PARSER_H

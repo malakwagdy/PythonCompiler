@@ -296,6 +296,12 @@ void Parser::synchronize() {
 
     // Skip tokens until we find a statement boundary
     while (!isAtEnd()) {
+        // Check if we've reached a semicolon, which marks a statement boundary
+        if (peek().type == SYMBOL && peek().lexeme == ";") {
+            consume(); // Consume the semicolon
+            return;
+        }
+
         // These tokens often indicate a statement boundary
         if (peek().type == KEYWORD &&
             (peek().lexeme == "if" || peek().lexeme == "while" ||
@@ -349,32 +355,41 @@ std::shared_ptr<StatementListNode> Parser::parseStatementList() {
 }
 
 std::shared_ptr<ASTNode> Parser::parseStatement() {
+    std::shared_ptr<ASTNode> statement;
+
     // Check for keywords that start specific statement types
     if (check(KEYWORD)) {
         if (check("if")) {
-            return parseIfStatement();
+            statement = parseIfStatement();
         } else if (check("while")) {
-            return parseWhileStatement();
+            statement = parseWhileStatement();
         } else if (check("for")) {
-            return parseForStatement();
+            statement = parseForStatement();
         } else if (check("def")) {
-            return parseFunctionDef();
+            statement = parseFunctionDef();
         } else if (check("return")) {
-            return parseReturnStatement();
+            statement = parseReturnStatement();
         } else if (check("import")) {
-            return parseImportStatement();
+            statement = parseImportStatement();
+        }
+    } else {
+        // If not a special statement, it's an expression or assignment
+        auto expr = parseExpression();
+
+        // Check if this is an assignment (target = value)
+        if (check(OPERATOR) && peek().lexeme == "=") {
+            statement = parseAssignment(expr);
+        } else {
+            statement = expr;
         }
     }
 
-    // If not a special statement, it's an expression or assignment
-    auto expr = parseExpression();
-
-    // Check if this is an assignment (target = value)
-    if (check(OPERATOR) && peek().lexeme == "=") {
-        return parseAssignment(expr);
+    // Handle optional semicolon at the end of the statement
+    if (check(SYMBOL) && peek().lexeme == ";") {
+        consume(); // Consume the semicolon
     }
 
-    return expr;
+    return statement;
 }
 
 std::shared_ptr<AssignmentNode> Parser::parseAssignment(std::shared_ptr<ASTNode> target) {
@@ -390,10 +405,11 @@ std::shared_ptr<IfNode> Parser::parseIfStatement() {
 
     auto condition = parseExpression();
 
-    if (!match(SYMBOL) || peek().lexeme != ":") {
+    if (!check(SYMBOL) || peek().lexeme != ":") {
         error("Expected ':' after if condition", peek().line_number, peek().column_number);
         throw std::runtime_error("Syntax error in if statement");
     }
+    consume();
 
     auto if_block = parseBlock();
     auto if_node = std::make_shared<IfNode>(condition, if_block, if_token.line_number, if_token.column_number);
@@ -416,10 +432,11 @@ std::shared_ptr<ElifNode> Parser::parseElifClause() {
 
     auto condition = parseExpression();
 
-    if (!match(SYMBOL) || peek().lexeme != ":") {
-        error("Expected ':' after elif condition", peek().line_number, peek().column_number);
-        throw std::runtime_error("Syntax error in elif clause");
+    if (!check(SYMBOL) || peek().lexeme != ":") {
+        error("Expected ':' after if condition", peek().line_number, peek().column_number);
+        throw std::runtime_error("Syntax error in if statement");
     }
+    consume();
 
     auto block = parseBlock();
     return std::make_shared<ElifNode>(condition, block, elif_token.line_number, elif_token.column_number);
@@ -428,10 +445,12 @@ std::shared_ptr<ElifNode> Parser::parseElifClause() {
 std::shared_ptr<ElseNode> Parser::parseElseClause() {
     Token else_token = consume(); // Consume 'else'
 
-    if (!match(SYMBOL) || peek().lexeme != ":") {
+    // Check specifically for the colon
+    if (!check(SYMBOL) || peek().lexeme != ":") {
         error("Expected ':' after else", peek().line_number, peek().column_number);
         throw std::runtime_error("Syntax error in else clause");
     }
+    consume(); // Consume the colon - this line is essential
 
     auto block = parseBlock();
     return std::make_shared<ElseNode>(block, else_token.line_number, else_token.column_number);
@@ -442,10 +461,11 @@ std::shared_ptr<WhileNode> Parser::parseWhileStatement() {
 
     auto condition = parseExpression();
 
-    if (!match(SYMBOL) || peek().lexeme != ":") {
-        error("Expected ':' after while condition", peek().line_number, peek().column_number);
-        throw std::runtime_error("Syntax error in while statement");
+    if (!check(SYMBOL) || peek().lexeme != ":") {
+        error("Expected ':' after if condition", peek().line_number, peek().column_number);
+        throw std::runtime_error("Syntax error in if statement");
     }
+    consume();
 
     auto block = parseBlock();
     return std::make_shared<WhileNode>(condition, block, while_token.line_number, while_token.column_number);
@@ -464,42 +484,82 @@ std::shared_ptr<ForNode> Parser::parseForStatement() {
 
     auto iterable = parseExpression();
 
-    if (!match(SYMBOL) || peek().lexeme != ":") {
-        error("Expected ':' after for loop iterable", peek().line_number, peek().column_number);
-        throw std::runtime_error("Syntax error in for statement");
+    if (!check(SYMBOL) || peek().lexeme != ":") {
+        error("Expected ':' after if condition", peek().line_number, peek().column_number);
+        throw std::runtime_error("Syntax error in if statement");
     }
+    consume();
 
     auto block = parseBlock();
     return std::make_shared<ForNode>(target, iterable, block, for_token.line_number, for_token.column_number);
 }
 
+// std::shared_ptr<FunctionDefNode> Parser::parseFunctionDef() {
+//     Token def_token = consume(); // Consume 'def'
+//
+//     if (!check(IDENTIFIER) && !check(FUNCTION_IDENTIFIER)) {
+//         error("Expected function name after 'def'", peek().line_number, peek().column_number);
+//         throw std::runtime_error("Syntax error in function definition");
+//     }
+//
+//     std::string name = consume().lexeme;
+//
+//     if (!match(LPAREN)) {
+//         error("Expected '(' after function name", peek().line_number, peek().column_number);
+//         throw std::runtime_error("Syntax error in function definition");
+//     }
+//
+//     auto params = parseParameters();
+//
+//     if (!match(RPAREN)) {
+//         error("Expected ')' after function parameters", peek().line_number, peek().column_number);
+//         throw std::runtime_error("Syntax error in function definition");
+//     }
+//
+//     if (!check(SYMBOL) || peek().lexeme != ":") {
+//         error("Expected ':' after if condition", peek().line_number, peek().column_number);
+//         throw std::runtime_error("Syntax error in if statement");
+//     }
+//     consume();
+//
+//     auto body = parseBlock();
+//     return std::make_shared<FunctionDefNode>(name, params, body, def_token.line_number, def_token.column_number);
+// }
 std::shared_ptr<FunctionDefNode> Parser::parseFunctionDef() {
     Token def_token = consume(); // Consume 'def'
 
+    // Check for function name
     if (!check(IDENTIFIER) && !check(FUNCTION_IDENTIFIER)) {
         error("Expected function name after 'def'", peek().line_number, peek().column_number);
         throw std::runtime_error("Syntax error in function definition");
     }
-
     std::string name = consume().lexeme;
 
-    if (!match(LPAREN)) {
+    // Check for opening parenthesis
+    if (!check(LPAREN)) {
         error("Expected '(' after function name", peek().line_number, peek().column_number);
         throw std::runtime_error("Syntax error in function definition");
     }
+    consume(); // Consume '('
 
+    // Parse parameter list
     auto params = parseParameters();
 
-    if (!match(RPAREN)) {
+    // Check for closing parenthesis
+    if (!check(RPAREN)) {
         error("Expected ')' after function parameters", peek().line_number, peek().column_number);
         throw std::runtime_error("Syntax error in function definition");
     }
+    consume(); // Consume ')'
 
-    if (!match(SYMBOL) || peek().lexeme != ":") {
-        error("Expected ':' after function declaration", peek().line_number, peek().column_number);
+    // Check for colon
+    if (!check(SYMBOL) || peek().lexeme != ":") {
+        error("Expected ':' after function parameters", peek().line_number, peek().column_number);
         throw std::runtime_error("Syntax error in function definition");
     }
+    consume(); // Consume ':'
 
+    // Parse function body
     auto body = parseBlock();
     return std::make_shared<FunctionDefNode>(name, params, body, def_token.line_number, def_token.column_number);
 }
@@ -683,6 +743,13 @@ std::shared_ptr<ASTNode> Parser::parsePrimary() {
             return parseCall(node);
         }
 
+        // NEW: Check for built-in functions that should be called with parentheses
+        if (isBuiltInFunction(id.lexeme) && (check(STRING) || check(IDENTIFIER) || check(NUMERIC))) {
+            error("Missing parentheses in call to '" + id.lexeme + "'",
+                  peek().line_number, peek().column_number);
+            throw std::runtime_error("Syntax error in function call");
+        }
+
         // Handle attribute access: obj.attr
         if (check(OPERATOR) && peek().lexeme == ".") {
             return parseAttributeReference(node);
@@ -695,6 +762,8 @@ std::shared_ptr<ASTNode> Parser::parsePrimary() {
 
         return node;
     }
+
+
 
     // Handle literals: numbers
     if (check(NUMERIC)) {
@@ -817,15 +886,33 @@ std::shared_ptr<ASTNode> Parser::parseCall(std::shared_ptr<ASTNode> function) {
     return call;
 }
 
+// std::shared_ptr<ArgListNode> Parser::parseArguments() {
+//     auto arg_list = std::make_shared<ArgListNode>();
+//
+//     if (!check(RPAREN)) {
+//         // Parse first argument
+//         arg_list->arguments.push_back(parseExpression());
+//
+//         // Parse remaining arguments
+//         while (match(SYMBOL) && peek().lexeme == ",") {
+//             arg_list->arguments.push_back(parseExpression());
+//         }
+//     }
+//
+//     return arg_list;
+// }
+
 std::shared_ptr<ArgListNode> Parser::parseArguments() {
     auto arg_list = std::make_shared<ArgListNode>();
 
+    // If not immediately at closing parenthesis, parse arguments
     if (!check(RPAREN)) {
         // Parse first argument
         arg_list->arguments.push_back(parseExpression());
 
         // Parse remaining arguments
-        while (match(SYMBOL) && peek().lexeme == ",") {
+        while (check(SYMBOL) && peek().lexeme == ",") {
+            consume(); // Explicitly consume the comma
             arg_list->arguments.push_back(parseExpression());
         }
     }
@@ -836,22 +923,27 @@ std::shared_ptr<ArgListNode> Parser::parseArguments() {
 std::shared_ptr<ParamListNode> Parser::parseParameters() {
     auto param_list = std::make_shared<ParamListNode>();
 
+    // If we're not immediately at the closing parenthesis, then parse parameters
     if (!check(RPAREN)) {
         // Parse first parameter
-        if (check(IDENTIFIER)) {
-            param_list->parameters.push_back(consume().lexeme);
-
-            // Parse remaining parameters
-            while (match(SYMBOL) && peek().lexeme == ",") {
-                if (!check(IDENTIFIER)) {
-                    error("Expected parameter name after comma", peek().line_number, peek().column_number);
-                    throw std::runtime_error("Syntax error in parameter list");
-                }
-                param_list->parameters.push_back(consume().lexeme);
-            }
-        } else {
+        if (!check(IDENTIFIER)) {
             error("Expected parameter name", peek().line_number, peek().column_number);
             throw std::runtime_error("Syntax error in parameter list");
+        }
+
+        // Add first parameter
+        param_list->parameters.push_back(consume().lexeme);
+
+        // Parse remaining parameters
+        while (check(SYMBOL) && peek().lexeme == ",") {
+            consume(); // Explicitly consume the comma
+
+            if (!check(IDENTIFIER)) {
+                error("Expected parameter name after comma", peek().line_number, peek().column_number);
+                throw std::runtime_error("Syntax error in parameter list");
+            }
+
+            param_list->parameters.push_back(consume().lexeme);
         }
     }
 
@@ -930,4 +1022,15 @@ void Parser::printErrors() {
         }
         std::cout << "Total errors: " << errors.size() << std::endl;
     }
+}
+
+bool Parser::isBuiltInFunction(const std::string& name) {
+    // List of common built-in functions in Python
+    static const std::vector<std::string> builtins = {
+        "print", "input", "len", "range", "str", "int", "float", "list",
+        "dict", "set", "tuple", "sum", "min", "max", "abs", "all", "any",
+        "sorted", "reversed", "enumerate", "zip", "open", "type"
+    };
+
+    return std::find(builtins.begin(), builtins.end(), name) != builtins.end();
 }

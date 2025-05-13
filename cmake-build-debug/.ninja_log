@@ -1,0 +1,56 @@
+# ninja log v6
+2161	2368	1747159291196378234	PythonCompilerGUI.app/Contents/MacOS/PythonCompilerGUI	6e0e86f0888233dd
+2590	5153	1747159424996774540	CMakeFiles/PythonCompilerGUI.dir/main.cpp.o	ba349d2864aa867c
+2590	4692	1747159424997246493	CMakeFiles/PythonCompilerGUI.dir/parser.cpp.o	2ea989860a5b5aa6
+14	2586	1747159424966243000	/Users/ZoZa/Documents/ASU /THIRD_YEAR_24-25/Spring '25/Design of Compilers/Project/Phase2_team15/PythonCompilerGUI/cmake-build-debug/PythonCompilerGUI_autogen/timestamp	8539a9f7845643e
+14	2586	1747159424966243000	PythonCompilerGUI_autogen/timestamp	8539a9f7845643e
+14	2586	1747159424966243000	/Users/ZoZa/Documents/ASU /THIRD_YEAR_24-25/Spring '25/Design of Compilers/Project/Phase2_team15/PythonCompilerGUI/cmake-build-debug/PythonCompilerGUI_autogen/mocs_compilation.cpp	8539a9f7845643e
+2590	4889	1747159424997121994	CMakeFiles/PythonCompilerGUI.dir/lexer.cpp.o	b27589f5be583f3b
+2589	5177	1747159424996151256	CMakeFiles/PythonCompilerGUI.dir/PythonCompilerGUI_autogen/mocs_compilation.cpp.o	3dd81b96491578ae
+14	2586	1747159424966243000	PythonCompilerGUI_autogen/mocs_compilation.cpp	8539a9f7845643e
+2590	5549	1747159424996968038	CMakeFiles/PythonCompilerGUI.dir/mainwindow.cpp.o	7dabdbed3381964d
+4	382	1747159660755488717	build.ninja	131b58a70025cf8f
+26	1755	1747159662614602000	PythonCompilerGUI_autogen/timestamp	8539a9f7845643e
+26	1755	1747159662614602000	PythonCompilerGUI_autogen/mocs_compilation.cpp	8539a9f7845643e
+26	1755	1747159662614602000	/Users/ZoZa/Documents/ASU /THIRD_YEAR_24-25/Spring '25/Design of Compilers/Project/Phase2_team15/PythonCompilerGUI/cmake-build-debug/PythonCompilerGUI_autogen/timestamp	8539a9f7845643e
+26	1755	1747159662614602000	/Users/ZoZa/Documents/ASU /THIRD_YEAR_24-25/Spring '25/Design of Compilers/Project/Phase2_team15/PythonCompilerGUI/cmake-build-debug/PythonCompilerGUI_autogen/mocs_compilation.cpp	8539a9f7845643e
+1756	3336	1747159662629447799	CMakeFiles/PythonCompilerGUI.dir/parser.cpp.o	2ea989860a5b5aa6
+1756	3535	1747159662629321883	CMakeFiles/PythonCompilerGUI.dir/lexer.cpp.o	b27589f5be583f3b
+1756	3665	1747159662629560714	CMakeFiles/PythonCompilerGUI.dir/parsetreewidget.cpp.o	fdb8bb7ffae3e241
+1756	3800	1747159662629029095	CMakeFiles/PythonCompilerGUI.dir/main.cpp.o	ba349d2864aa867c
+1755	3833	1747159662628754849	CMakeFiles/PythonCompilerGUI.dir/PythonCompilerGUI_autogen/mocs_compilation.cpp.o	3dd81b96491578ae
+1756	4183	1747159662629184052	CMakeFiles/PythonCompilerGUI.dir/mainwindow.cpp.o	7dabdbed3381964d
+4183	4412	1747159665056309001	PythonCompilerGUI.app/Contents/MacOS/PythonCompilerGUI	ca9468c733f76c0d
+13	65	1747160133785567907	PythonCompilerGUI_autogen/timestamp	8539a9f7845643e
+13	65	1747160133785567907	PythonCompilerGUI_autogen/mocs_compilation.cpp	8539a9f7845643e
+13	65	1747160133785567907	/Users/ZoZa/Documents/ASU /THIRD_YEAR_24-25/Spring '25/Design of Compilers/Project/Phase2_team15/PythonCompilerGUI/cmake-build-debug/PythonCompilerGUI_autogen/timestamp	8539a9f7845643e
+13	65	1747160133785567907	/Users/ZoZa/Documents/ASU /THIRD_YEAR_24-25/Spring '25/Design of Compilers/Project/Phase2_team15/PythonCompilerGUI/cmake-build-debug/PythonCompilerGUI_autogen/mocs_compilation.cpp	8539a9f7845643e
+66	1849	1747160133839070361	CMakeFiles/PythonCompilerGUI.dir/parser.cpp.o	2ea989860a5b5aa6
+66	2465	1747160133838945570	CMakeFiles/PythonCompilerGUI.dir/lexer.cpp.o	b27589f5be583f3b
+66	2493	1747160133839191443	CMakeFiles/PythonCompilerGUI.dir/parsetreewidget.cpp.o	fdb8bb7ffae3e241
+66	2661	1747160133838676532	CMakeFiles/PythonCompilerGUI.dir/main.cpp.o	ba349d2864aa867c
+66	2697	1747160133838446701	CMakeFiles/PythonCompilerGUI.dir/PythonCompilerGUI_autogen/mocs_compilation.cpp.o	3dd81b96491578ae
+66	3063	1747160133838810780	CMakeFiles/PythonCompilerGUI.dir/mainwindow.cpp.o	7dabdbed3381964d
+3064	3270	1747160136836240772	PythonCompilerGUI.app/Contents/MacOS/PythonCompilerGUI	ca9468c733f76c0d
+28	73	1747160266170298281	PythonCompilerGUI_autogen/timestamp	8539a9f7845643e
+28	73	1747160266170298281	PythonCompilerGUI_autogen/mocs_compilation.cpp	8539a9f7845643e
+28	73	1747160266170298281	/Users/ZoZa/Documents/ASU /THIRD_YEAR_24-25/Spring '25/Design of Compilers/Project/Phase2_team15/PythonCompilerGUI/cmake-build-debug/PythonCompilerGUI_autogen/timestamp	8539a9f7845643e
+28	73	1747160266170298281	/Users/ZoZa/Documents/ASU /THIRD_YEAR_24-25/Spring '25/Design of Compilers/Project/Phase2_team15/PythonCompilerGUI/cmake-build-debug/PythonCompilerGUI_autogen/mocs_compilation.cpp	8539a9f7845643e
+75	1689	1747160266217618766	CMakeFiles/PythonCompilerGUI.dir/parser.cpp.o	2ea989860a5b5aa6
+75	1926	1747160266217237896	CMakeFiles/PythonCompilerGUI.dir/lexer.cpp.o	b27589f5be583f3b
+76	2072	1747160266217971304	CMakeFiles/PythonCompilerGUI.dir/parsetreewidget.cpp.o	fdb8bb7ffae3e241
+74	2179	1747160266216512696	CMakeFiles/PythonCompilerGUI.dir/main.cpp.o	ba349d2864aa867c
+74	2210	1747160266216263407	CMakeFiles/PythonCompilerGUI.dir/PythonCompilerGUI_autogen/mocs_compilation.cpp.o	3dd81b96491578ae
+74	2562	1747160266216752735	CMakeFiles/PythonCompilerGUI.dir/mainwindow.cpp.o	7dabdbed3381964d
+2562	2765	1747160268704240309	PythonCompilerGUI.app/Contents/MacOS/PythonCompilerGUI	ca9468c733f76c0d
+13	1862	1747160950677921000	PythonCompilerGUI_autogen/timestamp	8539a9f7845643e
+13	1862	1747160950677921000	PythonCompilerGUI_autogen/mocs_compilation.cpp	8539a9f7845643e
+13	1862	1747160950677921000	/Users/ZoZa/Documents/ASU /THIRD_YEAR_24-25/Spring '25/Design of Compilers/Project/Phase2_team15/PythonCompilerGUI/cmake-build-debug/PythonCompilerGUI_autogen/timestamp	8539a9f7845643e
+13	1862	1747160950677921000	/Users/ZoZa/Documents/ASU /THIRD_YEAR_24-25/Spring '25/Design of Compilers/Project/Phase2_team15/PythonCompilerGUI/cmake-build-debug/PythonCompilerGUI_autogen/mocs_compilation.cpp	8539a9f7845643e
+1866	3351	1747160950694771857	CMakeFiles/PythonCompilerGUI.dir/parser.cpp.o	2ea989860a5b5aa6
+1864	3657	1747160950693245023	CMakeFiles/PythonCompilerGUI.dir/lexer.cpp.o	b27589f5be583f3b
+1866	3733	1747160950695009100	CMakeFiles/PythonCompilerGUI.dir/parsetreewidget.cpp.o	fdb8bb7ffae3e241
+1864	3913	1747160950692961489	CMakeFiles/PythonCompilerGUI.dir/main.cpp.o	ba349d2864aa867c
+1864	3986	1747160950692670206	CMakeFiles/PythonCompilerGUI.dir/PythonCompilerGUI_autogen/mocs_compilation.cpp.o	3dd81b96491578ae
+1864	4370	1747160950693104569	CMakeFiles/PythonCompilerGUI.dir/mainwindow.cpp.o	7dabdbed3381964d
+4371	4586	1747160953199478754	PythonCompilerGUI.app/Contents/MacOS/PythonCompilerGUI	ca9468c733f76c0d

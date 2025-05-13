@@ -1,0 +1,9 @@
+/Users/ZoZa/Documents/ASU /THIRD_YEAR_24-25/Spring '25/Design of Compilers/Project/Phase2_team15/PythonCompilerGUI/cmake-build-debug/CMakeFiles/PythonCompilerGUI.dir
+/Users/ZoZa/Documents/ASU /THIRD_YEAR_24-25/Spring '25/Design of Compilers/Project/Phase2_team15/PythonCompilerGUI/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/ZoZa/Documents/ASU /THIRD_YEAR_24-25/Spring '25/Design of Compilers/Project/Phase2_team15/PythonCompilerGUI/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/Users/ZoZa/Documents/ASU /THIRD_YEAR_24-25/Spring '25/Design of Compilers/Project/Phase2_team15/PythonCompilerGUI/cmake-build-debug/CMakeFiles/list_install_components.dir
+/Users/ZoZa/Documents/ASU /THIRD_YEAR_24-25/Spring '25/Design of Compilers/Project/Phase2_team15/PythonCompilerGUI/cmake-build-debug/CMakeFiles/install.dir
+/Users/ZoZa/Documents/ASU /THIRD_YEAR_24-25/Spring '25/Design of Compilers/Project/Phase2_team15/PythonCompilerGUI/cmake-build-debug/CMakeFiles/install/local.dir
+/Users/ZoZa/Documents/ASU /THIRD_YEAR_24-25/Spring '25/Design of Compilers/Project/Phase2_team15/PythonCompilerGUI/cmake-build-debug/CMakeFiles/install/strip.dir
+/Users/ZoZa/Documents/ASU /THIRD_YEAR_24-25/Spring '25/Design of Compilers/Project/Phase2_team15/PythonCompilerGUI/cmake-build-debug/CMakeFiles/PythonCompilerGUI_autogen_timestamp_deps.dir
+/Users/ZoZa/Documents/ASU /THIRD_YEAR_24-25/Spring '25/Design of Compilers/Project/Phase2_team15/PythonCompilerGUI/cmake-build-debug/CMakeFiles/PythonCompilerGUI_autogen.dir

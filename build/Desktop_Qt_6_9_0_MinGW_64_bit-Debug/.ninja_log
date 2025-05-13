@@ -1,0 +1,33 @@
+# ninja log v6
+83	727	7666174373872378	PythonCompilerGUI_autogen/timestamp	4891986d78cd80db
+83	727	7666174373872378	D:/UNI/Junior Year/Semester 6/Design of Compilers/Project/QtTest/PythonCompilerGUI/build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/PythonCompilerGUI_autogen/timestamp	4891986d78cd80db
+83	727	7666174373872378	PythonCompilerGUI_autogen/mocs_compilation.cpp	4891986d78cd80db
+685	10347	7666094614768653	CMakeFiles/PythonCompilerGUI.dir/lexer.cpp.obj	99ef566f32637b2b
+83	727	7666174373872378	D:/UNI/Junior Year/Semester 6/Design of Compilers/Project/QtTest/PythonCompilerGUI/build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/PythonCompilerGUI_autogen/mocs_compilation.cpp	4891986d78cd80db
+16350	24243	7666174536540986	PythonCompilerGUI.exe	5daa6b97bba028bc
+4291	19851	7666173453893424	CMakeFiles/PythonCompilerGUI.dir/PythonCompilerGUI_autogen/mocs_compilation.cpp.obj	cefe53bc1d14d9ee
+729	16349	7666174380328760	CMakeFiles/PythonCompilerGUI.dir/mainwindow.cpp.obj	588cada6956584e4
+4320	19302	7666173454169078	CMakeFiles/PythonCompilerGUI.dir/main.cpp.obj	8a09d059ad8ed6d8
+28	1134	7666176086553656	build.ninja	82fad22b739e82c2
+31	1020	7666176086553656	build.ninja	82fad22b739e82c2
+35	249	7666176088187310	PythonCompilerGUI_autogen/timestamp	4891986d78cd80db
+35	249	7666176088187310	PythonCompilerGUI_autogen/mocs_compilation.cpp	4891986d78cd80db
+35	249	7666176088187310	D:/UNI/Junior Year/Semester 6/Design of Compilers/Project/QtTest/PythonCompilerGUI/build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/PythonCompilerGUI_autogen/timestamp	4891986d78cd80db
+35	249	7666176088187310	D:/UNI/Junior Year/Semester 6/Design of Compilers/Project/QtTest/PythonCompilerGUI/build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/PythonCompilerGUI_autogen/mocs_compilation.cpp	4891986d78cd80db
+250	5194	7666176090331331	CMakeFiles/PythonCompilerGUI.dir/mainwindow.cpp.obj	588cada6956584e4
+5194	9695	7666176139773232	PythonCompilerGUI.exe	5daa6b97bba028bc
+52	1346	7666181291375488	PythonCompilerGUI_autogen/timestamp	4891986d78cd80db
+52	1346	7666181291375488	PythonCompilerGUI_autogen/mocs_compilation.cpp	4891986d78cd80db
+52	1346	7666181291375488	D:/UNI/Junior Year/Semester 6/Design of Compilers/Project/QtTest/PythonCompilerGUI/build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/PythonCompilerGUI_autogen/timestamp	4891986d78cd80db
+52	1346	7666181291375488	D:/UNI/Junior Year/Semester 6/Design of Compilers/Project/QtTest/PythonCompilerGUI/build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/PythonCompilerGUI_autogen/mocs_compilation.cpp	4891986d78cd80db
+1354	10164	7666181292586331	CMakeFiles/PythonCompilerGUI.dir/main.cpp.obj	8a09d059ad8ed6d8
+1347	10347	7666181292511060	CMakeFiles/PythonCompilerGUI.dir/PythonCompilerGUI_autogen/mocs_compilation.cpp.obj	cefe53bc1d14d9ee
+1369	11456	7666181292729013	CMakeFiles/PythonCompilerGUI.dir/lexer.cpp.obj	99ef566f32637b2b
+1360	12645	7666181292651405	CMakeFiles/PythonCompilerGUI.dir/mainwindow.cpp.obj	588cada6956584e4
+12646	18693	7666181405497926	PythonCompilerGUI.exe	5daa6b97bba028bc
+35	296	7666182085184191	PythonCompilerGUI_autogen/timestamp	4891986d78cd80db
+35	296	7666182085184191	PythonCompilerGUI_autogen/mocs_compilation.cpp	4891986d78cd80db
+35	296	7666182085184191	D:/UNI/Junior Year/Semester 6/Design of Compilers/Project/QtTest/PythonCompilerGUI/build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/PythonCompilerGUI_autogen/timestamp	4891986d78cd80db
+35	296	7666182085184191	D:/UNI/Junior Year/Semester 6/Design of Compilers/Project/QtTest/PythonCompilerGUI/build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/PythonCompilerGUI_autogen/mocs_compilation.cpp	4891986d78cd80db
+297	6053	7666182087799836	CMakeFiles/PythonCompilerGUI.dir/mainwindow.cpp.obj	588cada6956584e4
+6053	10707	7666182145362649	PythonCompilerGUI.exe	5daa6b97bba028bc

@@ -1,0 +1,18 @@
+/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/Applications/CLion.app/Contents/bin/ninja/mac/aarch64/ninja -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH=/Users/ZoZa/Qt/6.9.0/macos -S "/Users/ZoZa/Documents/ASU /THIRD_YEAR_24-25/Spring '25/Design of Compilers/Project/Phase2_team15/PythonCompilerGUI" -B "/Users/ZoZa/Documents/ASU /THIRD_YEAR_24-25/Spring '25/Design of Compilers/Project/Phase2_team15/PythonCompilerGUI/cmake-build-debug"
+-- Configuring done (0.1s)
+CMake Error at /Users/ZoZa/Qt/6.9.0/macos/lib/cmake/Qt6Core/Qt6CoreMacros.cmake:688 (add_executable):
+  Cannot find source file:
+
+    ast.h
+
+  Tried extensions .c .C .c++ .cc .cpp .cxx .cu .mpp .m .M .mm .ixx .cppm
+  .ccm .cxxm .c++m .h .hh .h++ .hm .hpp .hxx .in .txx .f .F .for .f77 .f90
+  .f95 .f03 .hip .ispc
+Call Stack (most recent call first):
+  /Users/ZoZa/Qt/6.9.0/macos/lib/cmake/Qt6Core/Qt6CoreMacros.cmake:639 (_qt_internal_create_executable)
+  /Users/ZoZa/Qt/6.9.0/macos/lib/cmake/Qt6Core/Qt6CoreMacros.cmake:938 (qt6_add_executable)
+  CMakeLists.txt:35 (qt_add_executable)
+
+
+-- Generating done (0.1s)
+CMake Generate step failed.  Build files cannot be regenerated correctly.
