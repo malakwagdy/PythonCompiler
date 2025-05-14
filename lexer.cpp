@@ -18,11 +18,18 @@ using namespace std;
 // Constructor implementation
 Lexer::Lexer() : line_number(1) {
     // Initialize keywords map
+    // keywords = {
+    //     {"if", KEYWORD}, {"else", KEYWORD}, {"elif", KEYWORD},
+    //     {"while", KEYWORD}, {"for", KEYWORD}, {"def", KEYWORD},
+    //     {"return", KEYWORD}, {"True", DATA_TYPE}, {"False", DATA_TYPE},
+    //     {"None", DATA_TYPE}, {"in", KEYWORD}, {"import", KEYWORD}
+    // };
     keywords = {
         {"if", KEYWORD}, {"else", KEYWORD}, {"elif", KEYWORD},
         {"while", KEYWORD}, {"for", KEYWORD}, {"def", KEYWORD},
         {"return", KEYWORD}, {"True", DATA_TYPE}, {"False", DATA_TYPE},
-        {"None", DATA_TYPE}, {"in", KEYWORD}, {"import", KEYWORD}
+        {"None", DATA_TYPE}, {"in", KEYWORD}, {"import", KEYWORD},
+        {"and", KEYWORD}, {"or", KEYWORD}, {"not", KEYWORD} // Add these boolean operators
     };
 
     // Initialize indentation levels
@@ -42,9 +49,14 @@ bool Lexer::isIdentifier(const string& str) {
     return regex_match(str, regex("^[a-zA-Z_][a-zA-Z0-9_]*$"));
 }
 
+// bool Lexer::isOperator(const string& str) {
+//     // Matches arithmetic, comparison, logical, assignment, exponentiation, attribute access
+//     return regex_match(str, regex(R"(^([+\-*/%]|\*\*|==|!=|<=|>=|<|>|=|and|or|not|\.)$)"));
+// }
 bool Lexer::isOperator(const string& str) {
-    // Matches arithmetic, comparison, logical, assignment, exponentiation, attribute access
-    return regex_match(str, regex(R"(^([+\-*/%]|\*\*|==|!=|<=|>=|<|>|=|and|or|not|\.)$)"));
+    // Matches arithmetic, comparison, assignment, exponentiation, attribute access
+    // (removed "and|or|not" from this regex)
+    return regex_match(str, regex(R"(^([+\-*/%]|\*\*|==|!=|<=|>=|<|>|=|\.)$)"));
 }
 
 bool Lexer::isSymbol(const string& str) {
@@ -327,8 +339,8 @@ void Lexer::tokenizeWord(const string& word, int start_column) {
              << ": Invalid character in identifier: '" << word << "'\n";
         return;
     }
+    // Previous code remains the same...
 
-    // === Regex split ===
     regex splitter(R"(([-+]?\d*\.\d+|[-+]?\d+\.\d*|\d+|[a-zA-Z_][a-zA-Z0-9_]*|==|!=|<=|>=|\*\*|and|or|not|[+\-*/%=<>(){}\[\]:;,\.])|.)");
     auto words_begin = sregex_iterator(word.begin(), word.end(), splitter);
     auto words_end = sregex_iterator();
@@ -345,10 +357,25 @@ void Lexer::tokenizeWord(const string& word, int start_column) {
         // === Reserved Keyword ===
         if (keywords.count(token)) {
             bool is_assignment_context = false;
+            bool is_boolean_operator = (token == "and" || token == "or" || token == "not");
+            bool is_data_type = (keywords.at(token) == DATA_TYPE);
+
             if (!buffer.empty()) {
                 string prev = buffer.back().lexeme;
-                if (prev == "=" || prev == "." || prev == "(") is_assignment_context = true;
+
+                // Only consider it an error context if:
+                // 1. Previous token indicates identifier position (e.g., left side of assignment)
+                // 2. AND it's not a boolean operator that can legitimately follow parentheses
+                // 3. AND it's not a data type used as a value
+
+                if ((prev == "=" || prev == "." || prev == "(") && !is_boolean_operator) {
+                    // Special case: DATA_TYPE tokens (True, False, None) can appear after '=' as values
+                    if (!(prev == "=" && is_data_type)) {
+                        is_assignment_context = true;
+                    }
+                }
             }
+
             if (is_assignment_context) {
                 buffer.emplace_back(token, ERROR, line_number, token_start_col);
                 cerr << "Lexical Error at Line " << line_number << ", Column " << token_start_col
@@ -357,6 +384,60 @@ void Lexer::tokenizeWord(const string& word, int start_column) {
                 buffer.emplace_back(token, keywords.at(token), line_number, token_start_col);
             }
         }
+
+        // Rest of the code remains the same...
+    // === Regex split ===
+    // regex splitter(R"(([-+]?\d*\.\d+|[-+]?\d+\.\d*|\d+|[a-zA-Z_][a-zA-Z0-9_]*|==|!=|<=|>=|\*\*|and|or|not|[+\-*/%=<>(){}\[\]:;,\.])|.)");
+    // auto words_begin = sregex_iterator(word.begin(), word.end(), splitter);
+    // auto words_end = sregex_iterator();
+    //
+    // for (sregex_iterator it = words_begin; it != words_end; ++it) {
+    //     smatch match = *it;
+    //     string token = match.str(0);
+    //     int token_start_col = start_column + match.position(0);
+    //
+    //     if (token.empty() || all_of(token.begin(), token.end(), ::isspace)) {
+    //         continue;
+    //     }
+    //
+    //     // === Reserved Keyword ===
+    //     // if (keywords.count(token)) {
+    //     //     bool is_assignment_context = false;
+    //     //     if (!buffer.empty()) {
+    //     //         string prev = buffer.back().lexeme;
+    //     //         if (prev == "=" || prev == "." || prev == "(") is_assignment_context = true;
+    //     //     }
+    //     //     if (is_assignment_context) {
+    //     //         buffer.emplace_back(token, ERROR, line_number, token_start_col);
+    //     //         cerr << "Lexical Error at Line " << line_number << ", Column " << token_start_col
+    //     //              << ": Reserved keyword '" << token << "' cannot be used as an identifier\n";
+    //     //     } else {
+    //     //         buffer.emplace_back(token, keywords.at(token), line_number, token_start_col);
+    //     //     }
+    //     // }
+    //     // === Reserved Keyword ===
+    //     if (keywords.count(token)) {
+    //         bool is_assignment_context = false;
+    //         bool is_boolean_operator = (token == "and" || token == "or" || token == "not");
+    //
+    //         if (!buffer.empty()) {
+    //             string prev = buffer.back().lexeme;
+    //             // Only consider it an error context if:
+    //             // 1. The previous token suggests identifier usage context
+    //             // 2. AND it's not a boolean operator that can legitimately follow parentheses
+    //             if ((prev == "=" || prev == "." || prev == "(") && !is_boolean_operator) {
+    //                 is_assignment_context = true;
+    //             }
+    //         }
+    //
+    //         if (is_assignment_context) {
+    //             buffer.emplace_back(token, ERROR, line_number, token_start_col);
+    //             cerr << "Lexical Error at Line " << line_number << ", Column " << token_start_col
+    //                  << ": Reserved keyword '" << token << "' cannot be used as an identifier\n";
+    //         } else {
+    //             buffer.emplace_back(token, keywords.at(token), line_number, token_start_col);
+    //         }
+    //     }
 
         // === Operator ===
         else if (isOperator(token)) {

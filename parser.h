@@ -11,11 +11,49 @@
 class ASTNode;
 
 // AST Node Types
+// enum class NodeType {
+//     // Program structure
+//     PROGRAM,
+//     STATEMENT_LIST,
+//
+//     // Statement types
+//     ASSIGNMENT_STMT,
+//     IF_STMT,
+//     ELIF_CLAUSE,
+//     ELSE_CLAUSE,
+//     WHILE_STMT,
+//     FOR_STMT,
+//     FUNC_DEF,
+//     RETURN_STMT,
+//     IMPORT_STMT,
+//
+//     // Expressions
+//     BINARY_EXPR,
+//     UNARY_EXPR,
+//     CALL_EXPR,
+//     SUBSCRIPT_EXPR,
+//     ATTR_REF,
+//
+//     // Primary values
+//     IDENTIFIER,
+//     LITERAL,
+//     LIST_LITERAL,
+//     DICT_LITERAL,
+//
+//     // Other components
+//     PARAM_LIST,
+//     ARG_LIST,
+//     BLOCK,
+//     CONDITION_NODE,
+//
+//     // Error recovery
+//     ERROR_NODE
+// };
 enum class NodeType {
     // Program structure
     PROGRAM,
     STATEMENT_LIST,
-    
+
     // Statement types
     ASSIGNMENT_STMT,
     IF_STMT,
@@ -26,25 +64,27 @@ enum class NodeType {
     FUNC_DEF,
     RETURN_STMT,
     IMPORT_STMT,
-    
+
     // Expressions
     BINARY_EXPR,
     UNARY_EXPR,
     CALL_EXPR,
     SUBSCRIPT_EXPR,
     ATTR_REF,
-    
+    TERNARY_EXPR,  // Add this line
+
     // Primary values
     IDENTIFIER,
     LITERAL,
     LIST_LITERAL,
     DICT_LITERAL,
-    
+
     // Other components
     PARAM_LIST,
     ARG_LIST,
     BLOCK,
-    
+    CONDITION_NODE,
+
     // Error recovery
     ERROR_NODE
 };
@@ -58,7 +98,7 @@ public:
 
     ASTNode(NodeType type, int line = 0, int col = 0)
         : type(type), line_number(line), column_number(col) {}
-    
+
     virtual ~ASTNode() = default;
     virtual std::string toString(int indent = 0) const = 0;
 };
@@ -67,7 +107,7 @@ public:
 class ProgramNode : public ASTNode {
 public:
     std::vector<std::shared_ptr<ASTNode>> statements;
-    
+
     ProgramNode() : ASTNode(NodeType::PROGRAM) {}
     std::string toString(int indent = 0) const override;
 };
@@ -76,7 +116,7 @@ public:
 class StatementListNode : public ASTNode {
 public:
     std::vector<std::shared_ptr<ASTNode>> statements;
-    
+
     StatementListNode() : ASTNode(NodeType::STATEMENT_LIST) {}
     std::string toString(int indent = 0) const override;
 };
@@ -85,7 +125,7 @@ public:
 class BlockNode : public ASTNode {
 public:
     std::shared_ptr<ASTNode> statements;
-    
+
     BlockNode() : ASTNode(NodeType::BLOCK) {}
     std::string toString(int indent = 0) const override;
 };
@@ -95,7 +135,7 @@ class AssignmentNode : public ASTNode {
 public:
     std::shared_ptr<ASTNode> target;
     std::shared_ptr<ASTNode> value;
-    
+
     AssignmentNode(std::shared_ptr<ASTNode> t, std::shared_ptr<ASTNode> v, int line, int col)
         : ASTNode(NodeType::ASSIGNMENT_STMT, line, col), target(t), value(v) {}
     std::string toString(int indent = 0) const override;
@@ -108,7 +148,7 @@ public:
     std::shared_ptr<ASTNode> if_block;
     std::vector<std::shared_ptr<ASTNode>> elif_clauses;
     std::shared_ptr<ASTNode> else_block;
-    
+
     IfNode(std::shared_ptr<ASTNode> cond, std::shared_ptr<ASTNode> block, int line, int col)
         : ASTNode(NodeType::IF_STMT, line, col), condition(cond), if_block(block) {}
     std::string toString(int indent = 0) const override;
@@ -119,7 +159,7 @@ class ElifNode : public ASTNode {
 public:
     std::shared_ptr<ASTNode> condition;
     std::shared_ptr<ASTNode> block;
-    
+
     ElifNode(std::shared_ptr<ASTNode> cond, std::shared_ptr<ASTNode> b, int line, int col)
         : ASTNode(NodeType::ELIF_CLAUSE, line, col), condition(cond), block(b) {}
     std::string toString(int indent = 0) const override;
@@ -129,7 +169,7 @@ public:
 class ElseNode : public ASTNode {
 public:
     std::shared_ptr<ASTNode> block;
-    
+
     ElseNode(std::shared_ptr<ASTNode> b, int line, int col)
         : ASTNode(NodeType::ELSE_CLAUSE, line, col), block(b) {}
     std::string toString(int indent = 0) const override;
@@ -140,7 +180,7 @@ class WhileNode : public ASTNode {
 public:
     std::shared_ptr<ASTNode> condition;
     std::shared_ptr<ASTNode> block;
-    
+
     WhileNode(std::shared_ptr<ASTNode> cond, std::shared_ptr<ASTNode> b, int line, int col)
         : ASTNode(NodeType::WHILE_STMT, line, col), condition(cond), block(b) {}
     std::string toString(int indent = 0) const override;
@@ -152,7 +192,7 @@ public:
     std::shared_ptr<ASTNode> target;
     std::shared_ptr<ASTNode> iterable;
     std::shared_ptr<ASTNode> block;
-    
+
     ForNode(std::shared_ptr<ASTNode> t, std::shared_ptr<ASTNode> iter, std::shared_ptr<ASTNode> b, int line, int col)
         : ASTNode(NodeType::FOR_STMT, line, col), target(t), iterable(iter), block(b) {}
     std::string toString(int indent = 0) const override;
@@ -164,7 +204,7 @@ public:
     std::string name;
     std::shared_ptr<ASTNode> params;
     std::shared_ptr<ASTNode> body;
-    
+
     FunctionDefNode(const std::string& n, std::shared_ptr<ASTNode> p, std::shared_ptr<ASTNode> b, int line, int col)
         : ASTNode(NodeType::FUNC_DEF, line, col), name(n), params(p), body(b) {}
     std::string toString(int indent = 0) const override;
@@ -174,7 +214,7 @@ public:
 class ReturnNode : public ASTNode {
 public:
     std::shared_ptr<ASTNode> expression;
-    
+
     ReturnNode(std::shared_ptr<ASTNode> expr, int line, int col)
         : ASTNode(NodeType::RETURN_STMT, line, col), expression(expr) {}
     std::string toString(int indent = 0) const override;
@@ -185,7 +225,7 @@ class ImportNode : public ASTNode {
 public:
     std::string module;
     std::string alias; // For "import x as y"
-    
+
     ImportNode(const std::string& m, const std::string& a, int line, int col)
         : ASTNode(NodeType::IMPORT_STMT, line, col), module(m), alias(a) {}
     std::string toString(int indent = 0) const override;
@@ -197,7 +237,7 @@ public:
     std::string op;
     std::shared_ptr<ASTNode> left;
     std::shared_ptr<ASTNode> right;
-    
+
     BinaryExprNode(const std::string& o, std::shared_ptr<ASTNode> l, std::shared_ptr<ASTNode> r, int line, int col)
         : ASTNode(NodeType::BINARY_EXPR, line, col), op(o), left(l), right(r) {}
     std::string toString(int indent = 0) const override;
@@ -208,9 +248,26 @@ class UnaryExprNode : public ASTNode {
 public:
     std::string op;
     std::shared_ptr<ASTNode> operand;
-    
+
     UnaryExprNode(const std::string& o, std::shared_ptr<ASTNode> opnd, int line, int col)
         : ASTNode(NodeType::UNARY_EXPR, line, col), op(o), operand(opnd) {}
+    std::string toString(int indent = 0) const override;
+};
+
+// Ternary expression (x if condition else y)
+class TernaryExprNode : public ASTNode {
+public:
+    std::shared_ptr<ASTNode> condition;
+    std::shared_ptr<ASTNode> true_value;
+    std::shared_ptr<ASTNode> false_value;
+
+    TernaryExprNode(std::shared_ptr<ASTNode> condition,
+                   std::shared_ptr<ASTNode> true_value,
+                   std::shared_ptr<ASTNode> false_value,
+                   int line_number = 0, int column_number = 0)
+        : ASTNode(NodeType::TERNARY_EXPR, line_number, column_number),
+          condition(condition), true_value(true_value), false_value(false_value) {}
+
     std::string toString(int indent = 0) const override;
 };
 
@@ -219,7 +276,7 @@ class CallExprNode : public ASTNode {
 public:
     std::shared_ptr<ASTNode> function;
     std::shared_ptr<ASTNode> arguments;
-    
+
     CallExprNode(std::shared_ptr<ASTNode> func, std::shared_ptr<ASTNode> args, int line, int col)
         : ASTNode(NodeType::CALL_EXPR, line, col), function(func), arguments(args) {}
     std::string toString(int indent = 0) const override;
@@ -230,7 +287,7 @@ class SubscriptExprNode : public ASTNode {
 public:
     std::shared_ptr<ASTNode> container;
     std::shared_ptr<ASTNode> index;
-    
+
     SubscriptExprNode(std::shared_ptr<ASTNode> c, std::shared_ptr<ASTNode> i, int line, int col)
         : ASTNode(NodeType::SUBSCRIPT_EXPR, line, col), container(c), index(i) {}
     std::string toString(int indent = 0) const override;
@@ -241,7 +298,7 @@ class AttrRefNode : public ASTNode {
 public:
     std::shared_ptr<ASTNode> object;
     std::string attribute;
-    
+
     AttrRefNode(std::shared_ptr<ASTNode> obj, const std::string& attr, int line, int col)
         : ASTNode(NodeType::ATTR_REF, line, col), object(obj), attribute(attr) {}
     std::string toString(int indent = 0) const override;
@@ -251,7 +308,7 @@ public:
 class IdentifierNode : public ASTNode {
 public:
     std::string name;
-    
+
     IdentifierNode(const std::string& n, int line, int col)
         : ASTNode(NodeType::IDENTIFIER, line, col), name(n) {}
     std::string toString(int indent = 0) const override;
@@ -262,7 +319,7 @@ class LiteralNode : public ASTNode {
 public:
     std::string value;
     std::string type; // e.g. "int", "float", "string", "bool"
-    
+
     LiteralNode(const std::string& v, const std::string& t, int line, int col)
         : ASTNode(NodeType::LITERAL, line, col), value(v), type(t) {}
     std::string toString(int indent = 0) const override;
@@ -272,7 +329,7 @@ public:
 class ListNode : public ASTNode {
 public:
     std::vector<std::shared_ptr<ASTNode>> elements;
-    
+
     ListNode(int line, int col) : ASTNode(NodeType::LIST_LITERAL, line, col) {}
     std::string toString(int indent = 0) const override;
 };
@@ -281,16 +338,26 @@ public:
 class DictNode : public ASTNode {
 public:
     std::vector<std::pair<std::shared_ptr<ASTNode>, std::shared_ptr<ASTNode>>> items;
-    
+
     DictNode(int line, int col) : ASTNode(NodeType::DICT_LITERAL, line, col) {}
     std::string toString(int indent = 0) const override;
 };
 
+// // Parameter list for function definitions
+// class ParamListNode : public ASTNode {
+// public:
+//     std::vector<std::string> parameters;
+//
+//     ParamListNode() : ASTNode(NodeType::PARAM_LIST) {}
+//     std::string toString(int indent = 0) const override;
+// };
+
 // Parameter list for function definitions
 class ParamListNode : public ASTNode {
 public:
-    std::vector<std::string> parameters;
-    
+    // Change from std::vector<std::string> to std::vector<std::shared_ptr<IdentifierNode>>
+    std::vector<std::shared_ptr<IdentifierNode>> parameters;
+
     ParamListNode() : ASTNode(NodeType::PARAM_LIST) {}
     std::string toString(int indent = 0) const override;
 };
@@ -299,8 +366,19 @@ public:
 class ArgListNode : public ASTNode {
 public:
     std::vector<std::shared_ptr<ASTNode>> arguments;
-    
+
     ArgListNode() : ASTNode(NodeType::ARG_LIST) {}
+    std::string toString(int indent = 0) const override;
+};
+
+// New Condition Node class to represent the condition container
+class ConditionNode : public ASTNode {
+public:
+    std::shared_ptr<ASTNode> condition;
+
+    ConditionNode(std::shared_ptr<ASTNode> cond, int line, int col)
+        : ASTNode(NodeType::CONDITION_NODE, line, col), condition(cond) {}
+
     std::string toString(int indent = 0) const override;
 };
 
@@ -308,7 +386,7 @@ public:
 class ErrorNode : public ASTNode {
 public:
     std::string message;
-    
+
     ErrorNode(const std::string& msg, int line, int col)
         : ASTNode(NodeType::ERROR_NODE, line, col), message(msg) {}
     std::string toString(int indent = 0) const override;
@@ -351,7 +429,7 @@ private:
     std::shared_ptr<ReturnNode> parseReturnStatement();
     std::shared_ptr<ImportNode> parseImportStatement();
     std::shared_ptr<BlockNode> parseBlock();
-    
+
     std::shared_ptr<ASTNode> parseExpression();
     std::shared_ptr<ASTNode> parseOrExpr();
     std::shared_ptr<ASTNode> parseAndExpr();
@@ -362,6 +440,13 @@ private:
     std::shared_ptr<ASTNode> parseFactor();
     std::shared_ptr<ASTNode> parsePower();
     std::shared_ptr<ASTNode> parseUnary();
+
+    void debugToken(const std::string &context);
+    // Add this method declaration
+    std::shared_ptr<ASTNode> parseTernaryExpr();
+
+    std::string tokenTypeToString(TokenType type);
+
     std::shared_ptr<ASTNode> parsePrimary();
     std::shared_ptr<ASTNode> parseAttributeReference(std::shared_ptr<ASTNode> object);
     std::shared_ptr<ASTNode> parseSubscript(std::shared_ptr<ASTNode> container);
