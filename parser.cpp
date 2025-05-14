@@ -458,6 +458,14 @@ std::shared_ptr<ASTNode> Parser::parseStatement() {
 }
 
 std::shared_ptr<AssignmentNode> Parser::parseAssignment(std::shared_ptr<ASTNode> target) {
+     if (
+        dynamic_cast<IdentifierNode*>(target.get()) == nullptr &&
+        dynamic_cast<AttrRefNode*>(target.get()) == nullptr &&
+        dynamic_cast<SubscriptExprNode*>(target.get()) == nullptr
+    ) {
+        error("Cannot assign to expression", target->line_number, target->column_number);
+        throw std::runtime_error("Syntax error: invalid assignment target");
+    }
     Token op = peek();
     consume(); // Consume = operator
 

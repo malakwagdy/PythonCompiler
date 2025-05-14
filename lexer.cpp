@@ -166,7 +166,7 @@ void Lexer::analyzeBuffer()
         Token current = buffer[i];
 
         // Detect if a keyword is misused as an identifier (e.g., `if = 5`)
-        if (current.type == KEYWORD && i + 1 < buffer.size() && buffer[i + 1].type == OPERATOR
+        if ((current.type == KEYWORD||current.type==DATA_TYPE) && i + 1 < buffer.size() && buffer[i + 1].type == OPERATOR
             && buffer[i + 1].lexeme == "=") {
             // Mark current as ERROR and skip assignment
             current.type = ERROR;
