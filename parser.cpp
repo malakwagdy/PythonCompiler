@@ -305,9 +305,28 @@ bool Parser::isAtEnd() {
     return current_token == lexer.tokens.end() || current_token->type == END_OF_FILE;
 }
 
-void Parser::error(const std::string& message, int line, int column) {
-    std::string error_msg = "Syntax Error at line " + std::to_string(line) +
-                           ", column " + std::to_string(column) + ": " + message;
+bool Parser::isAssignmentOperator(const std::string &lexeme) {
+    return
+        lexeme == "="   ||
+        lexeme == "+="  ||
+        lexeme == "-="  ||
+        lexeme == "*="  ||
+        lexeme == "/="  ||
+        lexeme == "%="  ||
+        lexeme == "**=" ||
+        lexeme == "//=" ||
+        lexeme == "<<=" ||
+        lexeme == ">>=" ||
+        lexeme == "&="  ||
+        lexeme == "|="  ||
+        lexeme == "^=";
+}
+
+
+void Parser::error(const std::string &message, int line, int column)
+{
+    std::string error_msg = "Syntax Error at line " + std::to_string(line) + ", column "
+                            + std::to_string(column) + ": " + message;
     errors.push_back(error_msg);
     has_error = true;
 }
@@ -398,7 +417,7 @@ std::shared_ptr<ASTNode> Parser::parseStatement() {
         auto expr = parseExpression();
 
         // Check if this is an assignment (target = value)
-        if (check(OPERATOR) && peek().lexeme == "=") {
+        if (check(OPERATOR) && isAssignmentOperator(peek().lexeme)) {
             statement = parseAssignment(expr);
         } else {
             statement = expr;
@@ -418,7 +437,12 @@ std::shared_ptr<AssignmentNode> Parser::parseAssignment(std::shared_ptr<ASTNode>
     consume(); // Consume = operator
 
     auto value = parseExpression();
-    return std::make_shared<AssignmentNode>(target, value, op.line_number, op.column_number);
+    // you’ll need an AssignmentNode constructor that also stores op.lexeme
+    return std::make_shared<AssignmentNode>(target,
+                                            value,
+                                            op.lexeme,
+                                            op.line_number,
+                                            op.column_number);
 }
 
 std::shared_ptr<IfNode> Parser::parseIfStatement() {
@@ -645,7 +669,6 @@ std::shared_ptr<BlockNode> Parser::parseBlock() {
 std::shared_ptr<ASTNode> Parser::parseExpression() {
     return parseOrExpr();
 }
-
 
 std::shared_ptr<ASTNode> Parser::parseOrExpr() {
     auto left = parseAndExpr();
@@ -1429,11 +1452,12 @@ void Parser::printErrors() {
 
 bool Parser::isBuiltInFunction(const std::string& name) {
     // List of common built-in functions in Python
-    static const std::vector<std::string> builtins = {
-        "print", "input", "len", "range", "str", "int", "float", "list",
-        "dict", "set", "tuple", "sum", "min", "max", "abs", "all", "any",
-        "sorted", "reversed", "enumerate", "zip", "open", "type"
-    };
+    static const std::vector<std::string> builtins = {"print", "input",  "len",      "range",
+                                                      "str",   "int",    "float",    "list",
+                                                      "dict",  "set",    "tuple",    "sum",
+                                                      "min",   "max",    "abs",      "all",
+                                                      "any",   "sorted", "reversed", "enumerate",
+                                                      "zip",   "open",   "type"};
 
     return std::find(builtins.begin(), builtins.end(), name) != builtins.end();
 }

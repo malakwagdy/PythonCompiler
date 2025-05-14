@@ -94,11 +94,22 @@ public:
 // Assignment statement
 class AssignmentNode : public ASTNode {
 public:
+    std::string op;                        // <- store the operator lexeme
     std::shared_ptr<ASTNode> target;
     std::shared_ptr<ASTNode> value;
 
-    AssignmentNode(std::shared_ptr<ASTNode> t, std::shared_ptr<ASTNode> v, int line, int col)
-        : ASTNode(NodeType::ASSIGNMENT_STMT, line, col), target(t), value(v) {}
+    // Updated constructor:
+    AssignmentNode(std::shared_ptr<ASTNode> t,
+                   std::shared_ptr<ASTNode> v,
+                   const std::string &op_,
+                   int line,
+                   int col)
+        : ASTNode(NodeType::ASSIGNMENT_STMT, line, col)
+        , op(op_)
+        , target(std::move(t))
+        , value(std::move(v))
+    {}
+
     std::string toString(int indent = 0) const override;
 };
 
