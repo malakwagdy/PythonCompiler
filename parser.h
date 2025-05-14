@@ -45,6 +45,7 @@ enum class NodeType {
     ARG_LIST,
     BLOCK,
     CONDITION_NODE,
+    PARAMETER_NODE,
 
     // Error recovery
     ERROR_NODE
@@ -299,6 +300,21 @@ public:
     std::string toString(int indent = 0) const override;
 };
 
+// Parameter node for function parameters
+class ParameterNode : public ASTNode {
+public:
+    std::string name;
+    std::shared_ptr<ASTNode> default_value; // nullptr means no default value
+
+    ParameterNode(const std::string& name, std::shared_ptr<ASTNode> default_value = nullptr,
+                 int line = 0, int col = 0)
+        : ASTNode(NodeType::PARAMETER_NODE, line, col),
+          name(name), default_value(default_value) {}
+
+    std::string toString(int indent = 0) const override;
+};
+
+
 // // Parameter list for function definitions
 // class ParamListNode : public ASTNode {
 // public:
@@ -308,11 +324,21 @@ public:
 //     std::string toString(int indent = 0) const override;
 // };
 
+// // Parameter list for function definitions
+// class ParamListNode : public ASTNode {
+// public:
+//     // Change from std::vector<std::string> to std::vector<std::shared_ptr<IdentifierNode>>
+//     std::vector<std::shared_ptr<IdentifierNode>> parameters;
+//
+//     ParamListNode() : ASTNode(NodeType::PARAM_LIST) {}
+//     std::string toString(int indent = 0) const override;
+// };
+
 // Parameter list for function definitions
 class ParamListNode : public ASTNode {
 public:
-    // Change from std::vector<std::string> to std::vector<std::shared_ptr<IdentifierNode>>
-    std::vector<std::shared_ptr<IdentifierNode>> parameters;
+    // Change from vector<shared_ptr<IdentifierNode>> to vector<shared_ptr<ParameterNode>>
+    std::vector<std::shared_ptr<ParameterNode>> parameters;
 
     ParamListNode() : ASTNode(NodeType::PARAM_LIST) {}
     std::string toString(int indent = 0) const override;
@@ -365,6 +391,9 @@ private:
     bool check(TokenType type);
     bool check(const std::string& lexeme);
     bool isAtEnd();
+
+    bool isAssignmentOperator(const std::string &lexeme);
+
     bool isBuiltInFunction(const std::string& name); // Add this line
     void synchronize();
     void error(const std::string& message, int line, int column);

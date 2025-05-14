@@ -333,6 +333,14 @@ std::vector<std::shared_ptr<ASTNode>> ParseTreeWidget::getNodeChildren(std::shar
         }
         break;
 
+    case NodeType::PARAMETER_NODE: {
+        auto param = static_cast<ParameterNode*>(node.get());
+        if (param->default_value) {
+            children.push_back(param->default_value);
+        }
+        break;
+    }
+
     default:
         break;
     }
@@ -401,6 +409,11 @@ QString ParseTreeWidget::getNodeLabel(std::shared_ptr<ASTNode> node) {
             value = value.left(6) + "...";
         }
         return value;
+    }
+
+    case NodeType::PARAMETER_NODE: {
+    auto param = static_cast<ParameterNode*>(node.get());
+        return param->name.data();
     }
     case NodeType::LIST_LITERAL:
         return "[ ]";

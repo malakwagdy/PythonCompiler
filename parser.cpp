@@ -214,22 +214,47 @@ std::string DictNode::toString(int indent) const {
     return ss.str();
 }
 
+std::string ParameterNode::toString(int indent) const {
+    std::stringstream ss;
+    ss << getIndentation(indent) << "Parameter: " << name;
+
+    if (default_value) {
+        ss << " (with default value)" << std::endl;
+        ss << default_value->toString(indent + 1);
+    } else {
+        ss << " (no default)" << std::endl;
+    }
+
+    return ss.str();
+}
+
+// // std::string ParamListNode::toString(int indent) const {
+// //     std::stringstream ss;
+// //     ss << getIndentation(indent) << "Parameter List:" << std::endl;
+// //     for (const auto& param : parameters) {
+// //         ss << getIndentation(indent + 1) << param << std::endl;
+// //     }
+// //     return ss.str();
+// // }
+//
 // std::string ParamListNode::toString(int indent) const {
 //     std::stringstream ss;
 //     ss << getIndentation(indent) << "Parameter List:" << std::endl;
 //     for (const auto& param : parameters) {
-//         ss << getIndentation(indent + 1) << param << std::endl;
+//         // Call toString on each IdentifierNode parameter
+//         ss << param->toString(indent + 1);
 //     }
 //     return ss.str();
 // }
 
 std::string ParamListNode::toString(int indent) const {
     std::stringstream ss;
-    ss << getIndentation(indent) << "Parameter List:" << std::endl;
+    ss << getIndentation(indent) << "Parameters:" << std::endl;
+
     for (const auto& param : parameters) {
-        // Call toString on each IdentifierNode parameter
         ss << param->toString(indent + 1);
     }
+
     return ss.str();
 }
 
@@ -1153,6 +1178,64 @@ std::shared_ptr<ArgListNode> Parser::parseArguments() {
 //     return param_list;
 // }
 
+// std::shared_ptr<ParamListNode> Parser::parseParameters() {
+//     auto param_list = std::make_shared<ParamListNode>();
+//
+//     // If we're not immediately at the closing parenthesis, then parse parameters
+//     if (!check(RPAREN)) {
+//         // Parse first parameter
+//         if (!check(IDENTIFIER)) {
+//             error("Expected parameter name", peek().line_number, peek().column_number);
+//             throw std::runtime_error("Syntax error in parameter list");
+//         }
+//
+//         // Create an IdentifierNode for the parameter
+//         Token param_token = consume();
+//         auto param = std::make_shared<IdentifierNode>(param_token.lexeme,
+//                                             param_token.line_number,
+//                                             param_token.column_number);
+//
+//         // Check for default value (=)
+//         if (check(OPERATOR) && peek().lexeme == "=") {
+//             consume(); // Consume the equals sign
+//
+//             // Parse the default value expression and ignore it for now
+//             // We're just recognizing it syntactically without storing it in the AST
+//             parseExpression();
+//         }
+//
+//         param_list->parameters.push_back(param);
+//
+//         // Parse remaining parameters
+//         while (check(SYMBOL) && peek().lexeme == ",") {
+//             consume(); // Explicitly consume the comma
+//
+//             if (!check(IDENTIFIER)) {
+//                 error("Expected parameter name after comma", peek().line_number, peek().column_number);
+//                 throw std::runtime_error("Syntax error in parameter list");
+//             }
+//
+//             // Create an IdentifierNode for each parameter
+//             param_token = consume();
+//             param = std::make_shared<IdentifierNode>(param_token.lexeme,
+//                                                 param_token.line_number,
+//                                                 param_token.column_number);
+//
+//             // Check for default value (=)
+//             if (check(OPERATOR) && peek().lexeme == "=") {
+//                 consume(); // Consume the equals sign
+//
+//                 // Parse the default value expression and ignore it for now
+//                 parseExpression();
+//             }
+//
+//             param_list->parameters.push_back(param);
+//         }
+//     }
+//
+//     return param_list;
+// }
+
 std::shared_ptr<ParamListNode> Parser::parseParameters() {
     auto param_list = std::make_shared<ParamListNode>();
 
@@ -1164,20 +1247,24 @@ std::shared_ptr<ParamListNode> Parser::parseParameters() {
             throw std::runtime_error("Syntax error in parameter list");
         }
 
-        // Create an IdentifierNode for the parameter
+        // Get parameter name
         Token param_token = consume();
-        auto param = std::make_shared<IdentifierNode>(param_token.lexeme,
-                                            param_token.line_number,
-                                            param_token.column_number);
+        std::shared_ptr<ASTNode> default_value = nullptr;
 
         // Check for default value (=)
         if (check(OPERATOR) && peek().lexeme == "=") {
             consume(); // Consume the equals sign
-
-            // Parse the default value expression and ignore it for now
-            // We're just recognizing it syntactically without storing it in the AST
-            parseExpression();
+            // Parse and store the default value expression
+            default_value = parseExpression();
         }
+
+        // Create a ParameterNode for the parameter
+        auto param = std::make_shared<ParameterNode>(
+            param_token.lexeme,
+            default_value,
+            param_token.line_number,
+            param_token.column_number
+        );
 
         param_list->parameters.push_back(param);
 
@@ -1190,19 +1277,24 @@ std::shared_ptr<ParamListNode> Parser::parseParameters() {
                 throw std::runtime_error("Syntax error in parameter list");
             }
 
-            // Create an IdentifierNode for each parameter
+            // Get parameter name
             param_token = consume();
-            param = std::make_shared<IdentifierNode>(param_token.lexeme,
-                                                param_token.line_number,
-                                                param_token.column_number);
+            default_value = nullptr;
 
             // Check for default value (=)
             if (check(OPERATOR) && peek().lexeme == "=") {
                 consume(); // Consume the equals sign
-
-                // Parse the default value expression and ignore it for now
-                parseExpression();
+                // Parse and store the default value expression
+                default_value = parseExpression();
             }
+
+            // Create a ParameterNode for each parameter
+            auto param = std::make_shared<ParameterNode>(
+                param_token.lexeme,
+                default_value,
+                param_token.line_number,
+                param_token.column_number
+            );
 
             param_list->parameters.push_back(param);
         }
