@@ -313,13 +313,6 @@ std::vector<std::shared_ptr<ASTNode>> ParseTreeWidget::getNodeChildren(std::shar
         children.push_back(static_cast<AttrRefNode*>(node.get())->object);
         break;
 
-    case NodeType::TERNARY_EXPR: {
-        auto ternary = static_cast<TernaryExprNode*>(node.get());
-        children.push_back(ternary->true_value);
-        children.push_back(ternary->condition);
-        children.push_back(ternary->false_value);
-        break;
-    }
 
     case NodeType::LIST_LITERAL:
         for (auto& elem : static_cast<ListNode*>(node.get())->elements) {
@@ -395,9 +388,6 @@ QString ParseTreeWidget::getNodeLabel(std::shared_ptr<ASTNode> node) {
     case NodeType::ATTR_REF: {
         auto attr = std::static_pointer_cast<AttrRefNode>(node);
         return QString(".%1").arg(attr->attribute.c_str());
-    }
-    case NodeType::TERNARY_EXPR: {
-        return "if-else";
     }
     case NodeType::IDENTIFIER: {
         auto id = std::static_pointer_cast<IdentifierNode>(node);

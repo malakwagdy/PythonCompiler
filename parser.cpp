@@ -258,17 +258,6 @@ std::string ErrorNode::toString(int indent) const {
     return ss.str();
 }
 
-std::string TernaryExprNode::toString(int indent) const {
-    std::stringstream ss;
-    ss << getIndentation(indent) << "Ternary Expression (line " << line_number << ")" << std::endl;
-    ss << getIndentation(indent + 1) << "Value if True:" << std::endl;
-    ss << true_value->toString(indent + 2);
-    ss << getIndentation(indent + 1) << "Condition:" << std::endl;
-    ss << condition->toString(indent + 2);
-    ss << getIndentation(indent + 1) << "Value if False:" << std::endl;
-    ss << false_value->toString(indent + 2);
-    return ss.str();
-}
 
 // Parser implementation
 Parser::Parser(Lexer& lexer) : lexer(lexer), has_error(false) {
@@ -653,12 +642,10 @@ std::shared_ptr<BlockNode> Parser::parseBlock() {
     return block;
 }
 
-// std::shared_ptr<ASTNode> Parser::parseExpression() {
-//     return parseOrExpr();
-// }
 std::shared_ptr<ASTNode> Parser::parseExpression() {
-    return parseTernaryExpr(); // Start with ternary expressions instead of parseOrExpr()
+    return parseOrExpr();
 }
+
 
 std::shared_ptr<ASTNode> Parser::parseOrExpr() {
     auto left = parseAndExpr();
@@ -1452,27 +1439,3 @@ bool Parser::isBuiltInFunction(const std::string& name) {
 }
 
 
-std::shared_ptr<ASTNode> Parser::parseTernaryExpr() {
-    auto true_value = parseOrExpr(); // Start with normal expression parsing
-
-    // Check for ternary condition
-    if (check(KEYWORD) && peek().lexeme == "if") {
-        Token if_token = consume(); // Consume 'if'
-
-        auto condition = parseOrExpr();
-
-        if (!check(KEYWORD) || peek().lexeme != "else") {
-            error("Expected 'else' in ternary expression", peek().line_number, peek().column_number);
-            throw std::runtime_error("Syntax error in ternary expression");
-        }
-        consume(); // Consume 'else'
-
-        auto false_value = parseOrExpr(); // Parse the false expression
-
-        return std::make_shared<TernaryExprNode>(
-            condition, true_value, false_value,
-            if_token.line_number, if_token.column_number);
-    }
-
-    return true_value;
-}

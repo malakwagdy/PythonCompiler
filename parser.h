@@ -10,45 +10,7 @@
 // Forward declaration of Node classes
 class ASTNode;
 
-// AST Node Types
-// enum class NodeType {
-//     // Program structure
-//     PROGRAM,
-//     STATEMENT_LIST,
-//
-//     // Statement types
-//     ASSIGNMENT_STMT,
-//     IF_STMT,
-//     ELIF_CLAUSE,
-//     ELSE_CLAUSE,
-//     WHILE_STMT,
-//     FOR_STMT,
-//     FUNC_DEF,
-//     RETURN_STMT,
-//     IMPORT_STMT,
-//
-//     // Expressions
-//     BINARY_EXPR,
-//     UNARY_EXPR,
-//     CALL_EXPR,
-//     SUBSCRIPT_EXPR,
-//     ATTR_REF,
-//
-//     // Primary values
-//     IDENTIFIER,
-//     LITERAL,
-//     LIST_LITERAL,
-//     DICT_LITERAL,
-//
-//     // Other components
-//     PARAM_LIST,
-//     ARG_LIST,
-//     BLOCK,
-//     CONDITION_NODE,
-//
-//     // Error recovery
-//     ERROR_NODE
-// };
+//AST Node Types
 enum class NodeType {
     // Program structure
     PROGRAM,
@@ -71,7 +33,6 @@ enum class NodeType {
     CALL_EXPR,
     SUBSCRIPT_EXPR,
     ATTR_REF,
-    TERNARY_EXPR,  // Add this line
 
     // Primary values
     IDENTIFIER,
@@ -254,22 +215,6 @@ public:
     std::string toString(int indent = 0) const override;
 };
 
-// Ternary expression (x if condition else y)
-class TernaryExprNode : public ASTNode {
-public:
-    std::shared_ptr<ASTNode> condition;
-    std::shared_ptr<ASTNode> true_value;
-    std::shared_ptr<ASTNode> false_value;
-
-    TernaryExprNode(std::shared_ptr<ASTNode> condition,
-                   std::shared_ptr<ASTNode> true_value,
-                   std::shared_ptr<ASTNode> false_value,
-                   int line_number = 0, int column_number = 0)
-        : ASTNode(NodeType::TERNARY_EXPR, line_number, column_number),
-          condition(condition), true_value(true_value), false_value(false_value) {}
-
-    std::string toString(int indent = 0) const override;
-};
 
 // Function call
 class CallExprNode : public ASTNode {
@@ -442,8 +387,7 @@ private:
     std::shared_ptr<ASTNode> parseUnary();
 
     void debugToken(const std::string &context);
-    // Add this method declaration
-    std::shared_ptr<ASTNode> parseTernaryExpr();
+
 
     std::string tokenTypeToString(TokenType type);
 
