@@ -1,40 +1,45 @@
 #include "parser.h"
-#include <sstream>
-#include <iostream>
 #include <iomanip>
+#include <iostream>
+#include <sstream>
 
 // Helper function to create indentation for pretty printing
-std::string getIndentation(int indent) {
+std::string getIndentation(int indent)
+{
     return std::string(indent * 2, ' ');
 }
 
 // AST Node toString implementations
-std::string ProgramNode::toString(int indent) const {
+std::string ProgramNode::toString(int indent) const
+{
     std::stringstream ss;
     ss << getIndentation(indent) << "Program" << std::endl;
-    for (const auto& stmt : statements) {
+    for (const auto &stmt : statements) {
         ss << stmt->toString(indent + 1);
     }
     return ss.str();
 }
 
-std::string StatementListNode::toString(int indent) const {
+std::string StatementListNode::toString(int indent) const
+{
     std::stringstream ss;
     ss << getIndentation(indent) << "StatementList" << std::endl;
-    for (const auto& stmt : statements) {
+    for (const auto &stmt : statements) {
         ss << stmt->toString(indent + 1);
     }
     return ss.str();
 }
 
-std::string BlockNode::toString(int indent) const {
+std::string BlockNode::toString(int indent) const
+{
     std::stringstream ss;
     ss << getIndentation(indent) << "Block" << std::endl;
     ss << statements->toString(indent + 1);
     return ss.str();
 }
 
-std::string AssignmentNode::toString(int indent) const {
+std::string AssignmentNode::toString(int indent) const
+{
     std::stringstream ss;
     ss << getIndentation(indent) << "Assignment (line " << line_number << ")" << std::endl;
     ss << getIndentation(indent + 1) << "Target:" << std::endl;
@@ -44,7 +49,8 @@ std::string AssignmentNode::toString(int indent) const {
     return ss.str();
 }
 
-std::string IfNode::toString(int indent) const {
+std::string IfNode::toString(int indent) const
+{
     std::stringstream ss;
     ss << getIndentation(indent) << "If Statement (line " << line_number << ")" << std::endl;
     ss << getIndentation(indent + 1) << "Condition:" << std::endl;
@@ -52,7 +58,7 @@ std::string IfNode::toString(int indent) const {
     ss << getIndentation(indent + 1) << "Then:" << std::endl;
     ss << if_block->toString(indent + 2);
 
-    for (const auto& elif : elif_clauses) {
+    for (const auto &elif : elif_clauses) {
         ss << elif->toString(indent + 1);
     }
 
@@ -64,7 +70,8 @@ std::string IfNode::toString(int indent) const {
     return ss.str();
 }
 
-std::string ElifNode::toString(int indent) const {
+std::string ElifNode::toString(int indent) const
+{
     std::stringstream ss;
     ss << getIndentation(indent) << "Elif Clause (line " << line_number << ")" << std::endl;
     ss << getIndentation(indent + 1) << "Condition:" << std::endl;
@@ -74,14 +81,16 @@ std::string ElifNode::toString(int indent) const {
     return ss.str();
 }
 
-std::string ElseNode::toString(int indent) const {
+std::string ElseNode::toString(int indent) const
+{
     std::stringstream ss;
     ss << getIndentation(indent) << "Else Clause (line " << line_number << ")" << std::endl;
     ss << block->toString(indent + 1);
     return ss.str();
 }
 
-std::string WhileNode::toString(int indent) const {
+std::string WhileNode::toString(int indent) const
+{
     std::stringstream ss;
     ss << getIndentation(indent) << "While Statement (line " << line_number << ")" << std::endl;
     ss << getIndentation(indent + 1) << "Condition:" << std::endl;
@@ -91,7 +100,8 @@ std::string WhileNode::toString(int indent) const {
     return ss.str();
 }
 
-std::string ForNode::toString(int indent) const {
+std::string ForNode::toString(int indent) const
+{
     std::stringstream ss;
     ss << getIndentation(indent) << "For Statement (line " << line_number << ")" << std::endl;
     ss << getIndentation(indent + 1) << "Target:" << std::endl;
@@ -103,9 +113,11 @@ std::string ForNode::toString(int indent) const {
     return ss.str();
 }
 
-std::string FunctionDefNode::toString(int indent) const {
+std::string FunctionDefNode::toString(int indent) const
+{
     std::stringstream ss;
-    ss << getIndentation(indent) << "Function Definition: " << name << " (line " << line_number << ")" << std::endl;
+    ss << getIndentation(indent) << "Function Definition: " << name << " (line " << line_number
+       << ")" << std::endl;
     ss << getIndentation(indent + 1) << "Parameters:" << std::endl;
     ss << params->toString(indent + 2);
     ss << getIndentation(indent + 1) << "Body:" << std::endl;
@@ -113,7 +125,8 @@ std::string FunctionDefNode::toString(int indent) const {
     return ss.str();
 }
 
-std::string ReturnNode::toString(int indent) const {
+std::string ReturnNode::toString(int indent) const
+{
     std::stringstream ss;
     ss << getIndentation(indent) << "Return Statement (line " << line_number << ")" << std::endl;
     if (expression) {
@@ -124,7 +137,8 @@ std::string ReturnNode::toString(int indent) const {
     return ss.str();
 }
 
-std::string ImportNode::toString(int indent) const {
+std::string ImportNode::toString(int indent) const
+{
     std::stringstream ss;
     ss << getIndentation(indent) << "Import Statement (line " << line_number << ")" << std::endl;
     ss << getIndentation(indent + 1) << "Module: " << module << std::endl;
@@ -134,9 +148,11 @@ std::string ImportNode::toString(int indent) const {
     return ss.str();
 }
 
-std::string BinaryExprNode::toString(int indent) const {
+std::string BinaryExprNode::toString(int indent) const
+{
     std::stringstream ss;
-    ss << getIndentation(indent) << "Binary Expression: " << op << " (line " << line_number << ")" << std::endl;
+    ss << getIndentation(indent) << "Binary Expression: " << op << " (line " << line_number << ")"
+       << std::endl;
     ss << getIndentation(indent + 1) << "Left:" << std::endl;
     ss << left->toString(indent + 2);
     ss << getIndentation(indent + 1) << "Right:" << std::endl;
@@ -144,15 +160,18 @@ std::string BinaryExprNode::toString(int indent) const {
     return ss.str();
 }
 
-std::string UnaryExprNode::toString(int indent) const {
+std::string UnaryExprNode::toString(int indent) const
+{
     std::stringstream ss;
-    ss << getIndentation(indent) << "Unary Expression: " << op << " (line " << line_number << ")" << std::endl;
+    ss << getIndentation(indent) << "Unary Expression: " << op << " (line " << line_number << ")"
+       << std::endl;
     ss << getIndentation(indent + 1) << "Operand:" << std::endl;
     ss << operand->toString(indent + 2);
     return ss.str();
 }
 
-std::string CallExprNode::toString(int indent) const {
+std::string CallExprNode::toString(int indent) const
+{
     std::stringstream ss;
     ss << getIndentation(indent) << "Function Call (line " << line_number << ")" << std::endl;
     ss << getIndentation(indent + 1) << "Function:" << std::endl;
@@ -162,9 +181,11 @@ std::string CallExprNode::toString(int indent) const {
     return ss.str();
 }
 
-std::string SubscriptExprNode::toString(int indent) const {
+std::string SubscriptExprNode::toString(int indent) const
+{
     std::stringstream ss;
-    ss << getIndentation(indent) << "Subscript Expression (line " << line_number << ")" << std::endl;
+    ss << getIndentation(indent) << "Subscript Expression (line " << line_number << ")"
+       << std::endl;
     ss << getIndentation(indent + 1) << "Container:" << std::endl;
     ss << container->toString(indent + 2);
     ss << getIndentation(indent + 1) << "Index:" << std::endl;
@@ -172,7 +193,8 @@ std::string SubscriptExprNode::toString(int indent) const {
     return ss.str();
 }
 
-std::string AttrRefNode::toString(int indent) const {
+std::string AttrRefNode::toString(int indent) const
+{
     std::stringstream ss;
     ss << getIndentation(indent) << "Attribute Reference (line " << line_number << ")" << std::endl;
     ss << getIndentation(indent + 1) << "Object:" << std::endl;
@@ -181,31 +203,37 @@ std::string AttrRefNode::toString(int indent) const {
     return ss.str();
 }
 
-std::string IdentifierNode::toString(int indent) const {
+std::string IdentifierNode::toString(int indent) const
+{
     std::stringstream ss;
-    ss << getIndentation(indent) << "Identifier: " << name << " (line " << line_number << ")" << std::endl;
+    ss << getIndentation(indent) << "Identifier: " << name << " (line " << line_number << ")"
+       << std::endl;
     return ss.str();
 }
 
-std::string LiteralNode::toString(int indent) const {
+std::string LiteralNode::toString(int indent) const
+{
     std::stringstream ss;
-    ss << getIndentation(indent) << "Literal: " << value << " (" << type << ") (line " << line_number << ")" << std::endl;
+    ss << getIndentation(indent) << "Literal: " << value << " (" << type << ") (line "
+       << line_number << ")" << std::endl;
     return ss.str();
 }
 
-std::string ListNode::toString(int indent) const {
+std::string ListNode::toString(int indent) const
+{
     std::stringstream ss;
     ss << getIndentation(indent) << "List (line " << line_number << ")" << std::endl;
-    for (const auto& el : elements) {
+    for (const auto &el : elements) {
         ss << el->toString(indent + 1);
     }
     return ss.str();
 }
 
-std::string DictNode::toString(int indent) const {
+std::string DictNode::toString(int indent) const
+{
     std::stringstream ss;
     ss << getIndentation(indent) << "Dictionary (line " << line_number << ")" << std::endl;
-    for (const auto& item : items) {
+    for (const auto &item : items) {
         ss << getIndentation(indent + 1) << "Key:" << std::endl;
         ss << item.first->toString(indent + 2);
         ss << getIndentation(indent + 1) << "Value:" << std::endl;
@@ -223,27 +251,30 @@ std::string DictNode::toString(int indent) const {
 //     return ss.str();
 // }
 
-std::string ParamListNode::toString(int indent) const {
+std::string ParamListNode::toString(int indent) const
+{
     std::stringstream ss;
     ss << getIndentation(indent) << "Parameter List:" << std::endl;
-    for (const auto& param : parameters) {
+    for (const auto &param : parameters) {
         // Call toString on each IdentifierNode parameter
         ss << param->toString(indent + 1);
     }
     return ss.str();
 }
 
-std::string ArgListNode::toString(int indent) const {
+std::string ArgListNode::toString(int indent) const
+{
     std::stringstream ss;
     ss << getIndentation(indent) << "Argument List:" << std::endl;
-    for (const auto& arg : arguments) {
+    for (const auto &arg : arguments) {
         ss << arg->toString(indent + 1);
     }
     return ss.str();
 }
 
 // In parser.cpp:
-std::string ConditionNode::toString(int indent) const {
+std::string ConditionNode::toString(int indent) const
+{
     std::stringstream ss;
     ss << getIndentation(indent) << "Condition:" << std::endl;
     if (condition) {
@@ -252,13 +283,15 @@ std::string ConditionNode::toString(int indent) const {
     return ss.str();
 }
 
-std::string ErrorNode::toString(int indent) const {
+std::string ErrorNode::toString(int indent) const
+{
     std::stringstream ss;
     ss << getIndentation(indent) << "ERROR (line " << line_number << "): " << message << std::endl;
     return ss.str();
 }
 
-std::string TernaryExprNode::toString(int indent) const {
+std::string TernaryExprNode::toString(int indent) const
+{
     std::stringstream ss;
     ss << getIndentation(indent) << "Ternary Expression (line " << line_number << ")" << std::endl;
     ss << getIndentation(indent + 1) << "Value if True:" << std::endl;
@@ -271,22 +304,28 @@ std::string TernaryExprNode::toString(int indent) const {
 }
 
 // Parser implementation
-Parser::Parser(Lexer& lexer) : lexer(lexer), has_error(false) {
+Parser::Parser(Lexer &lexer)
+    : lexer(lexer)
+    , has_error(false)
+{
     current_token = lexer.tokens.begin();
 }
 
-Token& Parser::peek() {
+Token &Parser::peek()
+{
     return *current_token;
 }
 
-Token& Parser::consume() {
+Token &Parser::consume()
+{
     if (!isAtEnd()) {
         return *(current_token++);
     }
     return *current_token; // Return EOF token
 }
 
-bool Parser::match(TokenType type) {
+bool Parser::match(TokenType type)
+{
     if (check(type)) {
         consume();
         return true;
@@ -294,7 +333,8 @@ bool Parser::match(TokenType type) {
     return false;
 }
 
-bool Parser::match(const std::string& lexeme) {
+bool Parser::match(const std::string &lexeme)
+{
     if (check(lexeme)) {
         consume();
         return true;
@@ -302,28 +342,53 @@ bool Parser::match(const std::string& lexeme) {
     return false;
 }
 
-bool Parser::check(TokenType type) {
-    if (isAtEnd()) return false;
+bool Parser::check(TokenType type)
+{
+    if (isAtEnd())
+        return false;
     return current_token->type == type;
 }
 
-bool Parser::check(const std::string& lexeme) {
-    if (isAtEnd()) return false;
+bool Parser::check(const std::string &lexeme)
+{
+    if (isAtEnd())
+        return false;
     return current_token->lexeme == lexeme;
 }
 
-bool Parser::isAtEnd() {
+bool Parser::isAtEnd()
+{
     return current_token == lexer.tokens.end() || current_token->type == END_OF_FILE;
 }
 
-void Parser::error(const std::string& message, int line, int column) {
-    std::string error_msg = "Syntax Error at line " + std::to_string(line) +
-                           ", column " + std::to_string(column) + ": " + message;
+bool Parser::isAssignmentOperator(const std::string &lexeme) {
+    return
+        lexeme == "="   ||
+        lexeme == "+="  ||
+        lexeme == "-="  ||
+        lexeme == "*="  ||
+        lexeme == "/="  ||
+        lexeme == "%="  ||
+        lexeme == "**=" ||
+        lexeme == "//=" ||
+        lexeme == "<<=" ||
+        lexeme == ">>=" ||
+        lexeme == "&="  ||
+        lexeme == "|="  ||
+        lexeme == "^=";
+}
+
+
+void Parser::error(const std::string &message, int line, int column)
+{
+    std::string error_msg = "Syntax Error at line " + std::to_string(line) + ", column "
+                            + std::to_string(column) + ": " + message;
     errors.push_back(error_msg);
     has_error = true;
 }
 
-void Parser::synchronize() {
+void Parser::synchronize()
+{
     consume(); // Skip the problematic token
 
     // Skip tokens until we find a statement boundary
@@ -335,10 +400,10 @@ void Parser::synchronize() {
         }
 
         // These tokens often indicate a statement boundary
-        if (peek().type == KEYWORD &&
-            (peek().lexeme == "if" || peek().lexeme == "while" ||
-             peek().lexeme == "for" || peek().lexeme == "def" ||
-             peek().lexeme == "return" || peek().lexeme == "import")) {
+        if (peek().type == KEYWORD
+            && (peek().lexeme == "if" || peek().lexeme == "while" || peek().lexeme == "for"
+                || peek().lexeme == "def" || peek().lexeme == "return"
+                || peek().lexeme == "import")) {
             return;
         }
 
@@ -350,17 +415,19 @@ void Parser::synchronize() {
     }
 }
 
-std::shared_ptr<ProgramNode> Parser::parse() {
+std::shared_ptr<ProgramNode> Parser::parse()
+{
     return parseProgram();
 }
 
-std::shared_ptr<ProgramNode> Parser::parseProgram() {
+std::shared_ptr<ProgramNode> Parser::parseProgram()
+{
     auto program = std::make_shared<ProgramNode>();
 
     try {
         auto statements = parseStatementList();
         program->statements = statements->statements;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         error(e.what(), peek().line_number, peek().column_number);
         synchronize();
     }
@@ -368,7 +435,8 @@ std::shared_ptr<ProgramNode> Parser::parseProgram() {
     return program;
 }
 
-std::shared_ptr<StatementListNode> Parser::parseStatementList() {
+std::shared_ptr<StatementListNode> Parser::parseStatementList()
+{
     auto statement_list = std::make_shared<StatementListNode>();
 
     while (!isAtEnd() && peek().type != DEDENT) {
@@ -377,7 +445,7 @@ std::shared_ptr<StatementListNode> Parser::parseStatementList() {
             if (stmt) {
                 statement_list->statements.push_back(stmt);
             }
-        } catch (const std::exception& e) {
+        } catch (const std::exception &e) {
             error(e.what(), peek().line_number, peek().column_number);
             synchronize();
         }
@@ -386,7 +454,8 @@ std::shared_ptr<StatementListNode> Parser::parseStatementList() {
     return statement_list;
 }
 
-std::shared_ptr<ASTNode> Parser::parseStatement() {
+std::shared_ptr<ASTNode> Parser::parseStatement()
+{
     std::shared_ptr<ASTNode> statement;
 
     // Check for keywords that start specific statement types
@@ -409,7 +478,7 @@ std::shared_ptr<ASTNode> Parser::parseStatement() {
         auto expr = parseExpression();
 
         // Check if this is an assignment (target = value)
-        if (check(OPERATOR) && peek().lexeme == "=") {
+        if (check(OPERATOR) && isAssignmentOperator(peek().lexeme)) {
             statement = parseAssignment(expr);
         } else {
             statement = expr;
@@ -424,15 +493,20 @@ std::shared_ptr<ASTNode> Parser::parseStatement() {
     return statement;
 }
 
-std::shared_ptr<AssignmentNode> Parser::parseAssignment(std::shared_ptr<ASTNode> target) {
-    Token op = peek();
-    consume(); // Consume = operator
-
+std::shared_ptr<AssignmentNode> Parser::parseAssignment(std::shared_ptr<ASTNode> target)
+{
+    Token op = consume();          // now op.lexeme can be "+=", "-=", "**=", etc.
     auto value = parseExpression();
-    return std::make_shared<AssignmentNode>(target, value, op.line_number, op.column_number);
+    // you’ll need an AssignmentNode constructor that also stores op.lexeme
+    return std::make_shared<AssignmentNode>(target,
+                                            value,
+                                            op.lexeme,
+                                            op.line_number,
+                                            op.column_number);
 }
 
-std::shared_ptr<IfNode> Parser::parseIfStatement() {
+std::shared_ptr<IfNode> Parser::parseIfStatement()
+{
     Token if_token = consume(); // Consume 'if'
 
     auto condition = parseExpression();
@@ -444,7 +518,10 @@ std::shared_ptr<IfNode> Parser::parseIfStatement() {
     consume();
 
     auto if_block = parseBlock();
-    auto if_node = std::make_shared<IfNode>(condition, if_block, if_token.line_number, if_token.column_number);
+    auto if_node = std::make_shared<IfNode>(condition,
+                                            if_block,
+                                            if_token.line_number,
+                                            if_token.column_number);
 
     // Handle any number of elif clauses
     while (check(KEYWORD) && peek().lexeme == "elif") {
@@ -459,7 +536,8 @@ std::shared_ptr<IfNode> Parser::parseIfStatement() {
     return if_node;
 }
 
-std::shared_ptr<ElifNode> Parser::parseElifClause() {
+std::shared_ptr<ElifNode> Parser::parseElifClause()
+{
     Token elif_token = consume(); // Consume 'elif'
 
     auto condition = parseExpression();
@@ -471,10 +549,14 @@ std::shared_ptr<ElifNode> Parser::parseElifClause() {
     consume();
 
     auto block = parseBlock();
-    return std::make_shared<ElifNode>(condition, block, elif_token.line_number, elif_token.column_number);
+    return std::make_shared<ElifNode>(condition,
+                                      block,
+                                      elif_token.line_number,
+                                      elif_token.column_number);
 }
 
-std::shared_ptr<ElseNode> Parser::parseElseClause() {
+std::shared_ptr<ElseNode> Parser::parseElseClause()
+{
     Token else_token = consume(); // Consume 'else'
 
     // Check specifically for the colon
@@ -488,7 +570,8 @@ std::shared_ptr<ElseNode> Parser::parseElseClause() {
     return std::make_shared<ElseNode>(block, else_token.line_number, else_token.column_number);
 }
 
-std::shared_ptr<WhileNode> Parser::parseWhileStatement() {
+std::shared_ptr<WhileNode> Parser::parseWhileStatement()
+{
     Token while_token = consume(); // Consume 'while'
 
     auto condition = parseExpression();
@@ -500,10 +583,14 @@ std::shared_ptr<WhileNode> Parser::parseWhileStatement() {
     consume();
 
     auto block = parseBlock();
-    return std::make_shared<WhileNode>(condition, block, while_token.line_number, while_token.column_number);
+    return std::make_shared<WhileNode>(condition,
+                                       block,
+                                       while_token.line_number,
+                                       while_token.column_number);
 }
 
-std::shared_ptr<ForNode> Parser::parseForStatement() {
+std::shared_ptr<ForNode> Parser::parseForStatement()
+{
     Token for_token = consume(); // Consume 'for'
 
     auto target = parseExpression();
@@ -523,7 +610,11 @@ std::shared_ptr<ForNode> Parser::parseForStatement() {
     consume();
 
     auto block = parseBlock();
-    return std::make_shared<ForNode>(target, iterable, block, for_token.line_number, for_token.column_number);
+    return std::make_shared<ForNode>(target,
+                                     iterable,
+                                     block,
+                                     for_token.line_number,
+                                     for_token.column_number);
 }
 
 // std::shared_ptr<FunctionDefNode> Parser::parseFunctionDef() {
@@ -557,7 +648,8 @@ std::shared_ptr<ForNode> Parser::parseForStatement() {
 //     auto body = parseBlock();
 //     return std::make_shared<FunctionDefNode>(name, params, body, def_token.line_number, def_token.column_number);
 // }
-std::shared_ptr<FunctionDefNode> Parser::parseFunctionDef() {
+std::shared_ptr<FunctionDefNode> Parser::parseFunctionDef()
+{
     Token def_token = consume(); // Consume 'def'
 
     // Check for function name
@@ -593,22 +685,30 @@ std::shared_ptr<FunctionDefNode> Parser::parseFunctionDef() {
 
     // Parse function body
     auto body = parseBlock();
-    return std::make_shared<FunctionDefNode>(name, params, body, def_token.line_number, def_token.column_number);
+    return std::make_shared<FunctionDefNode>(name,
+                                             params,
+                                             body,
+                                             def_token.line_number,
+                                             def_token.column_number);
 }
 
-std::shared_ptr<ReturnNode> Parser::parseReturnStatement() {
+std::shared_ptr<ReturnNode> Parser::parseReturnStatement()
+{
     Token return_token = consume(); // Consume 'return'
 
     // Return can be with or without an expression
     if (peek().type == SYMBOL && peek().lexeme == ":") {
-        return std::make_shared<ReturnNode>(nullptr, return_token.line_number, return_token.column_number);
+        return std::make_shared<ReturnNode>(nullptr,
+                                            return_token.line_number,
+                                            return_token.column_number);
     }
 
     auto expr = parseExpression();
     return std::make_shared<ReturnNode>(expr, return_token.line_number, return_token.column_number);
 }
 
-std::shared_ptr<ImportNode> Parser::parseImportStatement() {
+std::shared_ptr<ImportNode> Parser::parseImportStatement()
+{
     Token import_token = consume(); // Consume 'import'
 
     if (!check(IDENTIFIER)) {
@@ -631,10 +731,14 @@ std::shared_ptr<ImportNode> Parser::parseImportStatement() {
         alias = consume().lexeme;
     }
 
-    return std::make_shared<ImportNode>(module, alias, import_token.line_number, import_token.column_number);
+    return std::make_shared<ImportNode>(module,
+                                        alias,
+                                        import_token.line_number,
+                                        import_token.column_number);
 }
 
-std::shared_ptr<BlockNode> Parser::parseBlock() {
+std::shared_ptr<BlockNode> Parser::parseBlock()
+{
     auto block = std::make_shared<BlockNode>();
 
     // A block must start with an indent
@@ -656,11 +760,13 @@ std::shared_ptr<BlockNode> Parser::parseBlock() {
 // std::shared_ptr<ASTNode> Parser::parseExpression() {
 //     return parseOrExpr();
 // }
-std::shared_ptr<ASTNode> Parser::parseExpression() {
+std::shared_ptr<ASTNode> Parser::parseExpression()
+{
     return parseTernaryExpr(); // Start with ternary expressions instead of parseOrExpr()
 }
 
-std::shared_ptr<ASTNode> Parser::parseOrExpr() {
+std::shared_ptr<ASTNode> Parser::parseOrExpr()
+{
     auto left = parseAndExpr();
 
     while (check(KEYWORD) && peek().lexeme == "or") {
@@ -672,7 +778,8 @@ std::shared_ptr<ASTNode> Parser::parseOrExpr() {
     return left;
 }
 
-std::shared_ptr<ASTNode> Parser::parseAndExpr() {
+std::shared_ptr<ASTNode> Parser::parseAndExpr()
+{
     auto left = parseNotExpr();
 
     while (check(KEYWORD) && peek().lexeme == "and") {
@@ -697,7 +804,8 @@ std::shared_ptr<ASTNode> Parser::parseAndExpr() {
 //     return parseComparisonExpr();
 // }
 
-std::shared_ptr<ASTNode> Parser::parseNotExpr() {
+std::shared_ptr<ASTNode> Parser::parseNotExpr()
+{
     // Special handling for 'not' keyword
     if (check(KEYWORD) && peek().lexeme == "not") {
         Token op = consume(); // Consume 'not'
@@ -714,69 +822,88 @@ std::shared_ptr<ASTNode> Parser::parseNotExpr() {
     return parseComparisonExpr();
 }
 
-std::shared_ptr<ASTNode> Parser::parseComparisonExpr() {
+std::shared_ptr<ASTNode> Parser::parseComparisonExpr()
+{
     auto left = parseArithmeticExpr();
 
     // Handle comparison operators: ==, !=, <, >, <=, >=
-    if (check(OPERATOR) && (
-        peek().lexeme == "==" || peek().lexeme == "!=" ||
-        peek().lexeme == "<" || peek().lexeme == ">" ||
-        peek().lexeme == "<=" || peek().lexeme == ">=")) {
-
+    if (check(OPERATOR)
+        && (peek().lexeme == "==" || peek().lexeme == "!=" || peek().lexeme == "<"
+            || peek().lexeme == ">" || peek().lexeme == "<=" || peek().lexeme == ">=")) {
         Token op = consume();
         auto right = parseArithmeticExpr();
-        left = std::make_shared<BinaryExprNode>(op.lexeme, left, right, op.line_number, op.column_number);
+        left = std::make_shared<BinaryExprNode>(op.lexeme,
+                                                left,
+                                                right,
+                                                op.line_number,
+                                                op.column_number);
     }
 
     return left;
 }
 
-std::shared_ptr<ASTNode> Parser::parseArithmeticExpr() {
+std::shared_ptr<ASTNode> Parser::parseArithmeticExpr()
+{
     auto left = parseTerm();
 
     // Handle addition and subtraction
     while (check(OPERATOR) && (peek().lexeme == "+" || peek().lexeme == "-")) {
         Token op = consume();
         auto right = parseTerm();
-        left = std::make_shared<BinaryExprNode>(op.lexeme, left, right, op.line_number, op.column_number);
+        left = std::make_shared<BinaryExprNode>(op.lexeme,
+                                                left,
+                                                right,
+                                                op.line_number,
+                                                op.column_number);
     }
 
     return left;
 }
 
-std::shared_ptr<ASTNode> Parser::parseTerm() {
+std::shared_ptr<ASTNode> Parser::parseTerm()
+{
     auto left = parseFactor();
 
     // Handle multiplication, division, and modulo
-    while (check(OPERATOR) && (
-        peek().lexeme == "*" || peek().lexeme == "/" || peek().lexeme == "%")) {
-
+    while (check(OPERATOR)
+           && (peek().lexeme == "*" || peek().lexeme == "/" || peek().lexeme == "%" || peek().lexeme == "//")) {
         Token op = consume();
         auto right = parseFactor();
-        left = std::make_shared<BinaryExprNode>(op.lexeme, left, right, op.line_number, op.column_number);
+        left = std::make_shared<BinaryExprNode>(op.lexeme,
+                                                left,
+                                                right,
+                                                op.line_number,
+                                                op.column_number);
     }
 
     return left;
 }
 
-std::shared_ptr<ASTNode> Parser::parseFactor() {
+std::shared_ptr<ASTNode> Parser::parseFactor()
+{
     auto left = parsePower();
 
     // Handle exponentiation
     if (check(OPERATOR) && peek().lexeme == "**") {
         Token op = consume();
         auto right = parseFactor(); // Exponentiation is right-associative
-        left = std::make_shared<BinaryExprNode>(op.lexeme, left, right, op.line_number, op.column_number);
+        left = std::make_shared<BinaryExprNode>(op.lexeme,
+                                                left,
+                                                right,
+                                                op.line_number,
+                                                op.column_number);
     }
 
     return left;
 }
 
-std::shared_ptr<ASTNode> Parser::parsePower() {
+std::shared_ptr<ASTNode> Parser::parsePower()
+{
     return parseUnary();
 }
 
-std::shared_ptr<ASTNode> Parser::parseUnary() {
+std::shared_ptr<ASTNode> Parser::parseUnary()
+{
     // Handle unary operators: +, -
     if (check(OPERATOR) && (peek().lexeme == "+" || peek().lexeme == "-")) {
         Token op = consume();
@@ -788,31 +915,38 @@ std::shared_ptr<ASTNode> Parser::parseUnary() {
 }
 
 //remove these two functions later
-void Parser::debugToken(const std::string& context) {
+void Parser::debugToken(const std::string &context)
+{
     if (isAtEnd()) {
         std::cout << context << ": At end of token stream" << std::endl;
         return;
     }
 
     std::cout << context << ": Token = " << peek().lexeme
-              << ", Type = " << tokenTypeToString(peek().type)
-              << ", Line " << peek().line_number
+              << ", Type = " << tokenTypeToString(peek().type) << ", Line " << peek().line_number
               << ", Column " << peek().column_number << std::endl;
 }
 
-std::string Parser::tokenTypeToString(TokenType type) {
+std::string Parser::tokenTypeToString(TokenType type)
+{
     // Add cases for each token type to debug
-    switch(type) {
-        case LBRACE: return "LBRACE";
-        case RBRACE: return "RBRACE";
-        case LBRACKET: return "LBRACKET";
-        case RBRACKET: return "RBRACKET";
-        // Add other token types as needed
-        default: return "OTHER";
+    switch (type) {
+    case LBRACE:
+        return "LBRACE";
+    case RBRACE:
+        return "RBRACE";
+    case LBRACKET:
+        return "LBRACKET";
+    case RBRACKET:
+        return "RBRACKET";
+    // Add other token types as needed
+    default:
+        return "OTHER";
     }
 }
 
-std::shared_ptr<ASTNode> Parser::parsePrimary() {
+std::shared_ptr<ASTNode> Parser::parsePrimary()
+{
     // Add debug at the start to see what token we're starting with
     debugToken("parsePrimary start");
 
@@ -857,7 +991,8 @@ std::shared_ptr<ASTNode> Parser::parsePrimary() {
         // NEW: Check for built-in functions that should be called with parentheses
         if (isBuiltInFunction(id.lexeme) && (check(STRING) || check(IDENTIFIER) || check(NUMERIC))) {
             error("Missing parentheses in call to '" + id.lexeme + "'",
-                  peek().line_number, peek().column_number);
+                  peek().line_number,
+                  peek().column_number);
             throw std::runtime_error("Syntax error in function call");
         }
 
@@ -887,14 +1022,20 @@ std::shared_ptr<ASTNode> Parser::parsePrimary() {
     // Handle literals: strings
     if (check(STRING)) {
         Token str = consume();
-        return std::make_shared<LiteralNode>(str.lexeme, "string", str.line_number, str.column_number);
+        return std::make_shared<LiteralNode>(str.lexeme,
+                                             "string",
+                                             str.line_number,
+                                             str.column_number);
     }
 
     // Handle literals: booleans and None
     if (check(DATA_TYPE)) {
         Token data = consume();
         std::string type = (data.lexeme == "True" || data.lexeme == "False") ? "bool" : "None";
-        return std::make_shared<LiteralNode>(data.lexeme, type, data.line_number, data.column_number);
+        return std::make_shared<LiteralNode>(data.lexeme,
+                                             type,
+                                             data.line_number,
+                                             data.column_number);
     }
 
     // Handle parenthesized expressions
@@ -926,7 +1067,8 @@ std::shared_ptr<ASTNode> Parser::parsePrimary() {
     throw std::runtime_error("Unexpected token in expression");
 }
 
-std::shared_ptr<ASTNode> Parser::parseAttributeReference(std::shared_ptr<ASTNode> object) {
+std::shared_ptr<ASTNode> Parser::parseAttributeReference(std::shared_ptr<ASTNode> object)
+{
     consume(); // Consume '.'
 
     // Be more flexible with what we accept as an attribute name
@@ -937,7 +1079,10 @@ std::shared_ptr<ASTNode> Parser::parseAttributeReference(std::shared_ptr<ASTNode
     }
 
     Token attr = consume();
-    auto attr_ref = std::make_shared<AttrRefNode>(object, attr.lexeme, attr.line_number, attr.column_number);
+    auto attr_ref = std::make_shared<AttrRefNode>(object,
+                                                  attr.lexeme,
+                                                  attr.line_number,
+                                                  attr.column_number);
 
     // Handle chained attribute access: obj.attr1.attr2
     if (check(OPERATOR) && peek().lexeme == ".") {
@@ -1002,7 +1147,8 @@ std::shared_ptr<ASTNode> Parser::parseAttributeReference(std::shared_ptr<ASTNode
 //     return attr_ref;
 // }
 
-std::shared_ptr<ASTNode> Parser::parseSubscript(std::shared_ptr<ASTNode> container) {
+std::shared_ptr<ASTNode> Parser::parseSubscript(std::shared_ptr<ASTNode> container)
+{
     Token bracket = consume(); // Consume '['
 
     auto index = parseExpression();
@@ -1012,7 +1158,10 @@ std::shared_ptr<ASTNode> Parser::parseSubscript(std::shared_ptr<ASTNode> contain
         throw std::runtime_error("Syntax error in subscript expression");
     }
 
-    auto subscript = std::make_shared<SubscriptExprNode>(container, index, bracket.line_number, bracket.column_number);
+    auto subscript = std::make_shared<SubscriptExprNode>(container,
+                                                         index,
+                                                         bracket.line_number,
+                                                         bracket.column_number);
 
     // Handle chained subscripts: list[i][j]
     if (check(LBRACKET)) {
@@ -1051,7 +1200,8 @@ std::shared_ptr<ASTNode> Parser::parseSubscript(std::shared_ptr<ASTNode> contain
 //
 //     return call;
 // }
-std::shared_ptr<ASTNode> Parser::parseCall(std::shared_ptr<ASTNode> function) {
+std::shared_ptr<ASTNode> Parser::parseCall(std::shared_ptr<ASTNode> function)
+{
     Token paren = consume(); // Consume '('
 
     // If there are no arguments (empty parentheses)
@@ -1095,7 +1245,8 @@ std::shared_ptr<ASTNode> Parser::parseCall(std::shared_ptr<ASTNode> function) {
 //     return arg_list;
 // }
 
-std::shared_ptr<ArgListNode> Parser::parseArguments() {
+std::shared_ptr<ArgListNode> Parser::parseArguments()
+{
     auto arg_list = std::make_shared<ArgListNode>();
 
     // If not immediately at closing parenthesis, parse arguments
@@ -1143,7 +1294,8 @@ std::shared_ptr<ArgListNode> Parser::parseArguments() {
 //     return param_list;
 // }
 
-std::shared_ptr<ParamListNode> Parser::parseParameters() {
+std::shared_ptr<ParamListNode> Parser::parseParameters()
+{
     auto param_list = std::make_shared<ParamListNode>();
 
     // If we're not immediately at the closing parenthesis, then parse parameters
@@ -1157,8 +1309,8 @@ std::shared_ptr<ParamListNode> Parser::parseParameters() {
         // Create an IdentifierNode for the parameter
         Token param_token = consume();
         auto param = std::make_shared<IdentifierNode>(param_token.lexeme,
-                                            param_token.line_number,
-                                            param_token.column_number);
+                                                      param_token.line_number,
+                                                      param_token.column_number);
 
         // Check for default value (=)
         if (check(OPERATOR) && peek().lexeme == "=") {
@@ -1176,15 +1328,17 @@ std::shared_ptr<ParamListNode> Parser::parseParameters() {
             consume(); // Explicitly consume the comma
 
             if (!check(IDENTIFIER)) {
-                error("Expected parameter name after comma", peek().line_number, peek().column_number);
+                error("Expected parameter name after comma",
+                      peek().line_number,
+                      peek().column_number);
                 throw std::runtime_error("Syntax error in parameter list");
             }
 
             // Create an IdentifierNode for each parameter
             param_token = consume();
             param = std::make_shared<IdentifierNode>(param_token.lexeme,
-                                                param_token.line_number,
-                                                param_token.column_number);
+                                                     param_token.line_number,
+                                                     param_token.column_number);
 
             // Check for default value (=)
             if (check(OPERATOR) && peek().lexeme == "=") {
@@ -1229,7 +1383,8 @@ std::shared_ptr<ParamListNode> Parser::parseParameters() {
 //
 //     return list;
 // }
-std::shared_ptr<ListNode> Parser::parseListLiteral() {
+std::shared_ptr<ListNode> Parser::parseListLiteral()
+{
     Token bracket = consume(); // Consume '['
     auto list = std::make_shared<ListNode>(bracket.line_number, bracket.column_number);
 
@@ -1266,7 +1421,9 @@ std::shared_ptr<ListNode> Parser::parseListLiteral() {
             } else if (check(RBRACKET)) {
                 break; // End of list
             } else {
-                error("Expected ',' or ']' after list element", peek().line_number, peek().column_number);
+                error("Expected ',' or ']' after list element",
+                      peek().line_number,
+                      peek().column_number);
                 throw std::runtime_error("Syntax error in list literal");
             }
         }
@@ -1281,10 +1438,10 @@ std::shared_ptr<ListNode> Parser::parseListLiteral() {
     return list;
 }
 
-std::shared_ptr<DictNode> Parser::parseDictLiteral() {
-    std::cout << "Entering parseDictLiteral with token: " << peek().lexeme
-              << " at line " << peek().line_number
-              << ", column " << peek().column_number << std::endl;
+std::shared_ptr<DictNode> Parser::parseDictLiteral()
+{
+    std::cout << "Entering parseDictLiteral with token: " << peek().lexeme << " at line "
+              << peek().line_number << ", column " << peek().column_number << std::endl;
 
     Token brace = consume(); // Consume '{'
     auto dict = std::make_shared<DictNode>(brace.line_number, brace.column_number);
@@ -1361,7 +1518,9 @@ std::shared_ptr<DictNode> Parser::parseDictLiteral() {
         } else if (check(RBRACE)) {
             break; // End of dictionary
         } else {
-            error("Expected ',' or '}' after dictionary item", peek().line_number, peek().column_number);
+            error("Expected ',' or '}' after dictionary item",
+                  peek().line_number,
+                  peek().column_number);
             throw std::runtime_error("Syntax error in dictionary literal");
         }
     }
@@ -1426,33 +1585,37 @@ std::shared_ptr<DictNode> Parser::parseDictLiteral() {
 //     return dict;
 // }
 
-void Parser::printParseTree(std::shared_ptr<ASTNode> root, int indent) {
+void Parser::printParseTree(std::shared_ptr<ASTNode> root, int indent)
+{
     std::cout << root->toString(indent);
 }
 
-void Parser::printErrors() {
+void Parser::printErrors()
+{
     if (!errors.empty()) {
         std::cout << "\n--- Parse Errors ---\n";
-        for (const auto& error : errors) {
+        for (const auto &error : errors) {
             std::cout << error << std::endl;
         }
         std::cout << "Total errors: " << errors.size() << std::endl;
     }
 }
 
-bool Parser::isBuiltInFunction(const std::string& name) {
+bool Parser::isBuiltInFunction(const std::string &name)
+{
     // List of common built-in functions in Python
-    static const std::vector<std::string> builtins = {
-        "print", "input", "len", "range", "str", "int", "float", "list",
-        "dict", "set", "tuple", "sum", "min", "max", "abs", "all", "any",
-        "sorted", "reversed", "enumerate", "zip", "open", "type"
-    };
+    static const std::vector<std::string> builtins = {"print", "input",  "len",      "range",
+                                                      "str",   "int",    "float",    "list",
+                                                      "dict",  "set",    "tuple",    "sum",
+                                                      "min",   "max",    "abs",      "all",
+                                                      "any",   "sorted", "reversed", "enumerate",
+                                                      "zip",   "open",   "type"};
 
     return std::find(builtins.begin(), builtins.end(), name) != builtins.end();
 }
 
-
-std::shared_ptr<ASTNode> Parser::parseTernaryExpr() {
+std::shared_ptr<ASTNode> Parser::parseTernaryExpr()
+{
     auto true_value = parseOrExpr(); // Start with normal expression parsing
 
     // Check for ternary condition
@@ -1469,9 +1632,11 @@ std::shared_ptr<ASTNode> Parser::parseTernaryExpr() {
 
         auto false_value = parseOrExpr(); // Parse the false expression
 
-        return std::make_shared<TernaryExprNode>(
-            condition, true_value, false_value,
-            if_token.line_number, if_token.column_number);
+        return std::make_shared<TernaryExprNode>(condition,
+                                                 true_value,
+                                                 false_value,
+                                                 if_token.line_number,
+                                                 if_token.column_number);
     }
 
     return true_value;
