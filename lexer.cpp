@@ -345,15 +345,10 @@ void Lexer::tokenizeWord(const string &word, int start_column)
     }
     // === Check if the token starts with digits followed by letters (e.g. 123abc) ===
     if (regex_match(word, regex(R"(^\d+[a-zA-Z_][a-zA-Z0-9_]*$)"))) {
-        // Split the token into a numeric part and an invalid identifier part
-        smatch match;
-        regex pattern(R"(^(\d+)([a-zA-Z_][a-zA-Z0-9_]*)$)");
-        if (regex_match(word, match, pattern)) {
-            buffer.emplace_back(word, ERROR, line_number, start_column);
-            cerr << "Lexical Error at Line " << line_number << ", Column " << start_column
-                 << ": Identifier cannot start with a digit: '" << word << "'\n";
-            return;
-        }
+        buffer.emplace_back(word, ERROR, line_number, start_column);
+        cerr << "Lexical Error at Line " << line_number << ", Column " << start_column
+             << ": Identifier cannot start with a digit: '" << word << "'\n";
+        return;
     }
 
     // === Check for invalid characters in identifiers (e.g. @, #, etc.) ===
@@ -363,13 +358,20 @@ void Lexer::tokenizeWord(const string &word, int start_column)
              << ": Invalid character in identifier: '" << word << "'\n";
         return;
     }
-    // Previous code remains the same...
 
-    static const std::regex splitter(R"(([-+]?\d*\.\d+|[-+]?\d+\.\d*|\d+|[A-Za-z_][A-Za-z0-9_]*|\+=|-=|\*=|/=|%=|\*\*=|//=|&=|\|=|\^=|<<=|>>=|!=|==|<=|>=|<<|>>|//|\*\*|and|or|not|[+\-*/%<>=&|\^~\.\(\)\{\}\[\]:;,])|.)");
+    if (word == "_") {
+        buffer.emplace_back(word, ERROR, line_number, start_column);
+        cerr << "Lexical Error at Line " << line_number
+             << ", Column " << start_column
+             << ": underscore (‘_’) is not allowed as an identifier\n";
+        return;
+    }
 
+    static const std::regex splitter(
+        R"(([-+]?\d*\.\d+|[-+]?\d+\.\d*|\d+|[A-Za-z_][A-Za-z0-9_]*|\+=|-=|\*=|/=|%=|\*\*=|//=|&=|\|=|\^=|<<=|>>=|!=|==|<=|>=|<<|>>|//|\*\*|and|or|not|[+\-*/%<>=&|\^~\.\(\)\{\}\[\]:;,])|.)");
 
     auto words_begin = sregex_iterator(word.begin(), word.end(), splitter);
-    auto words_end   = sregex_iterator();
+    auto words_end = sregex_iterator();
 
     for (sregex_iterator it = words_begin; it != words_end; ++it) {
         smatch match = *it;
@@ -380,24 +382,44 @@ void Lexer::tokenizeWord(const string &word, int start_column)
             continue;
         }
 
+        bool preceded_by_numeric_in_buffer = !buffer.empty() && buffer.back().type == NUMERIC;
+        // *** NEW: Check if the last token in the line's buffer was an IDENTIFIER ***
+        bool preceded_by_identifier_in_buffer = !buffer.empty() && buffer.back().type == IDENTIFIER;
+
+
         // === Reserved Keyword ===
         if (keywords.count(token)) {
+            if (preceded_by_numeric_in_buffer) {
+                bool is_allowed_after_numeric =
+                    (token == "and" || token == "or" || token == "not" ||
+                     token == "if" || token == "else" || token == "in");
+                if (!is_allowed_after_numeric) {
+                    buffer.emplace_back(token, ERROR, line_number, token_start_col);
+                    cerr << "Lexical Error at Line " << line_number << ", Column " << token_start_col
+                         << ": Keyword '" << token << "' cannot directly follow a numeric literal in this context.\n";
+                    continue;
+                }
+            }
+
+
             bool is_assignment_context = false;
             bool is_boolean_operator = (token == "and" || token == "or" || token == "not");
             bool is_data_type = (keywords.at(token) == DATA_TYPE);
 
             if (!buffer.empty()) {
-                string prev = buffer.back().lexeme;
-
-                // Only consider it an error context if:
-                // 1. Previous token indicates identifier position (e.g., left side of assignment)
-                // 2. AND it's not a boolean operator that can legitimately follow parentheses
-                // 3. AND it's not a data type used as a value
-
-                if ((prev == "=" || prev == "." || prev == "(") && !is_boolean_operator) {
-                    // Special case: DATA_TYPE tokens (True, False, None) can appear after '=' as values
-                    if (!(prev == "=" && is_data_type)) {
+                string prev_lexeme_in_buffer = buffer.back().lexeme;
+                TokenType prev_type_in_buffer = buffer.back().type;
+                if ( (prev_type_in_buffer == OPERATOR && prev_lexeme_in_buffer == "=") ||
+                    (prev_type_in_buffer == OPERATOR && prev_lexeme_in_buffer == ".") ||
+                    prev_type_in_buffer == LPAREN ) {
+                    if (!is_boolean_operator && !is_data_type) {
                         is_assignment_context = true;
+                    } else if (prev_lexeme_in_buffer == "=" && is_boolean_operator) {
+                        is_assignment_context = true;
+                    } else if ( (prev_lexeme_in_buffer == "." || prev_type_in_buffer == LPAREN) && is_data_type) {
+                        if (prev_lexeme_in_buffer == "."){
+                            is_assignment_context = true;
+                        }
                     }
                 }
             }
@@ -405,111 +427,78 @@ void Lexer::tokenizeWord(const string &word, int start_column)
             if (is_assignment_context) {
                 buffer.emplace_back(token, ERROR, line_number, token_start_col);
                 cerr << "Lexical Error at Line " << line_number << ", Column " << token_start_col
-                     << ": Reserved keyword '" << token << "' cannot be used as an identifier\n";
+                     << ": Reserved keyword '" << token << "' cannot be used as an identifier or in this context.\n";
             } else {
                 buffer.emplace_back(token, keywords.at(token), line_number, token_start_col);
             }
         }
-
-        // Rest of the code remains the same...
-        // === Regex split ===
-        // regex splitter(R"(([-+]?\d*\.\d+|[-+]?\d+\.\d*|\d+|[a-zA-Z_][a-zA-Z0-9_]*|==|!=|<=|>=|\*\*|and|or|not|[+\-*/%=<>(){}\[\]:;,\.])|.)");
-        // auto words_begin = sregex_iterator(word.begin(), word.end(), splitter);
-        // auto words_end = sregex_iterator();
-        //
-        // for (sregex_iterator it = words_begin; it != words_end; ++it) {
-        //     smatch match = *it;
-        //     string token = match.str(0);
-        //     int token_start_col = start_column + match.position(0);
-        //
-        //     if (token.empty() || all_of(token.begin(), token.end(), ::isspace)) {
-        //         continue;
-        //     }
-        //
-        //     // === Reserved Keyword ===
-        //     // if (keywords.count(token)) {
-        //     //     bool is_assignment_context = false;
-        //     //     if (!buffer.empty()) {
-        //     //         string prev = buffer.back().lexeme;
-        //     //         if (prev == "=" || prev == "." || prev == "(") is_assignment_context = true;
-        //     //     }
-        //     //     if (is_assignment_context) {
-        //     //         buffer.emplace_back(token, ERROR, line_number, token_start_col);
-        //     //         cerr << "Lexical Error at Line " << line_number << ", Column " << token_start_col
-        //     //              << ": Reserved keyword '" << token << "' cannot be used as an identifier\n";
-        //     //     } else {
-        //     //         buffer.emplace_back(token, keywords.at(token), line_number, token_start_col);
-        //     //     }
-        //     // }
-        //     // === Reserved Keyword ===
-        //     if (keywords.count(token)) {
-        //         bool is_assignment_context = false;
-        //         bool is_boolean_operator = (token == "and" || token == "or" || token == "not");
-        //
-        //         if (!buffer.empty()) {
-        //             string prev = buffer.back().lexeme;
-        //             // Only consider it an error context if:
-        //             // 1. The previous token suggests identifier usage context
-        //             // 2. AND it's not a boolean operator that can legitimately follow parentheses
-        //             if ((prev == "=" || prev == "." || prev == "(") && !is_boolean_operator) {
-        //                 is_assignment_context = true;
-        //             }
-        //         }
-        //
-        //         if (is_assignment_context) {
-        //             buffer.emplace_back(token, ERROR, line_number, token_start_col);
-        //             cerr << "Lexical Error at Line " << line_number << ", Column " << token_start_col
-        //                  << ": Reserved keyword '" << token << "' cannot be used as an identifier\n";
-        //         } else {
-        //             buffer.emplace_back(token, keywords.at(token), line_number, token_start_col);
-        //         }
-        //     }
-
         // === Operator ===
         else if (isOperator(token)) {
             buffer.emplace_back(token, OPERATOR, line_number, token_start_col);
         }
-
         // === Symbols ===
-        // Brackets
-        else if (token == "(")
-            buffer.emplace_back(token, LPAREN, line_number, token_start_col);
-        else if (token == ")")
-            buffer.emplace_back(token, RPAREN, line_number, token_start_col);
-        else if (token == "[")
-            buffer.emplace_back(token, LBRACKET, line_number, token_start_col);
-        else if (token == "]")
-            buffer.emplace_back(token, RBRACKET, line_number, token_start_col);
-        else if (token == "{")
-            buffer.emplace_back(token, LBRACE, line_number, token_start_col);
-        else if (token == "}")
-            buffer.emplace_back(token, RBRACE, line_number, token_start_col);
-        // Punctuation symbols
+        else if (token == "(") buffer.emplace_back(token, LPAREN, line_number, token_start_col);
+        else if (token == ")") buffer.emplace_back(token, RPAREN, line_number, token_start_col);
+        else if (token == "[") buffer.emplace_back(token, LBRACKET, line_number, token_start_col);
+        else if (token == "]") buffer.emplace_back(token, RBRACKET, line_number, token_start_col);
+        else if (token == "{") buffer.emplace_back(token, LBRACE, line_number, token_start_col);
+        else if (token == "}") buffer.emplace_back(token, RBRACE, line_number, token_start_col);
         else if (token == ":" || token == "," || token == ";") {
             buffer.emplace_back(token, SYMBOL, line_number, token_start_col);
         }
-        // else if (isSymbol(token)) {
-        //     buffer.emplace_back(token, SYMBOL, line_number, token_start_col);
-        // }
-
         // === Float ===
         else if (isFloat(token)) {
-            buffer.emplace_back(token, NUMERIC, line_number, token_start_col);
-            addToSymbolTable(token, "Numeric");
+            if (preceded_by_numeric_in_buffer) {
+                buffer.emplace_back(token, ERROR, line_number, token_start_col);
+                cerr << "Lexical Error at Line " << line_number << ", Column " << token_start_col
+                     << ": Numeric literal '" << token << "' cannot directly follow another numeric literal without an operator.\n";
+            } else if (preceded_by_identifier_in_buffer) { // e.g. `myVar 3.14`
+                buffer.emplace_back(token, ERROR, line_number, token_start_col);
+                cerr << "Lexical Error at Line " << line_number << ", Column " << token_start_col
+                     << ": Numeric literal '" << token << "' cannot directly follow an identifier ('"
+                     << buffer.back().lexeme << "') without an operator or separator.\n";
+            }
+            else {
+                buffer.emplace_back(token, NUMERIC, line_number, token_start_col);
+                addToSymbolTable(token, "Numeric");
+            }
         }
-
         // === Integer ===
         else if (isInteger(token)) {
-            buffer.emplace_back(token, NUMERIC, line_number, token_start_col);
-            addToSymbolTable(token, "Numeric");
+            if (preceded_by_numeric_in_buffer) {
+                buffer.emplace_back(token, ERROR, line_number, token_start_col);
+                cerr << "Lexical Error at Line " << line_number << ", Column " << token_start_col
+                     << ": Numeric literal '" << token << "' cannot directly follow another numeric literal without an operator.\n";
+            } else if (preceded_by_identifier_in_buffer) { // e.g. `myVar 123`
+                buffer.emplace_back(token, ERROR, line_number, token_start_col);
+                cerr << "Lexical Error at Line " << line_number << ", Column " << token_start_col
+                     << ": Numeric literal '" << token << "' cannot directly follow an identifier ('"
+                     << buffer.back().lexeme << "') without an operator or separator.\n";
+            }
+            else {
+                buffer.emplace_back(token, NUMERIC, line_number, token_start_col);
+                addToSymbolTable(token, "Numeric");
+            }
         }
-
         // === Valid Identifier ===
         else if (isIdentifier(token)) {
-            buffer.emplace_back(token, IDENTIFIER, line_number, token_start_col);
-            addToSymbolTable(token, "Identifier");
+            if (preceded_by_numeric_in_buffer) {
+                buffer.emplace_back(token, ERROR, line_number, token_start_col);
+                cerr << "Lexical Error at Line " << line_number << ", Column " << token_start_col
+                     << ": Identifier '" << token << "' cannot directly follow a numeric literal without an operator.\n";
+            }
+            // *** THIS IS THE KEY CHANGE FOR "hello world = 1" ***
+            else if (preceded_by_identifier_in_buffer) {
+                buffer.emplace_back(token, ERROR, line_number, token_start_col);
+                cerr << "Lexical Error at Line " << line_number << ", Column " << token_start_col
+                     << ": Identifier '" << token << "' cannot directly follow another identifier ('"
+                     << buffer.back().lexeme << "') without an operator or separator.\n";
+            }
+            else {
+                buffer.emplace_back(token, IDENTIFIER, line_number, token_start_col);
+                addToSymbolTable(token, "Identifier");
+            }
         }
-
         // === Catch-all: unknown/illegal token ===
         else {
             buffer.emplace_back(token, ERROR, line_number, token_start_col);
