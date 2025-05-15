@@ -84,8 +84,7 @@ bool Lexer::isSymbol(const string &str)
 void Lexer::addToSymbolTable(const string &name, const string &type)
 {
     // Add identifiers (not keywords or '_') or numbers if not already present
-    if (keywords.find(name) == keywords.end() && symbol_presence.find(name) == symbol_presence.end()
-        && name != "_" && isIdentifier(name)) {
+    if (keywords.find(name) == keywords.end() && symbol_presence.find(name) == symbol_presence.end()) {
         symbol_table.emplace_back(name, make_pair(type, line_number));
         symbol_presence[name] = true;
     }
@@ -359,13 +358,13 @@ void Lexer::tokenizeWord(const string &word, int start_column)
         return;
     }
 
-    if (word == "_") {
-        buffer.emplace_back(word, ERROR, line_number, start_column);
-        cerr << "Lexical Error at Line " << line_number
-             << ", Column " << start_column
-             << ": underscore (‘_’) is not allowed as an identifier\n";
-        return;
-    }
+    // if (word == "_") {
+    //     buffer.emplace_back(word, ERROR, line_number, start_column);
+    //     cerr << "Lexical Error at Line " << line_number
+    //          << ", Column " << start_column
+    //          << ": underscore (‘_’) is not allowed as an identifier\n";
+    //     return;
+    // }
 
     static const std::regex splitter(
         R"(([-+]?\d*\.\d+|[-+]?\d+\.\d*|\d+|[A-Za-z_][A-Za-z0-9_]*|\+=|-=|\*=|/=|%=|\*\*=|//=|&=|\|=|\^=|<<=|>>=|!=|==|<=|>=|<<|>>|//|\*\*|and|or|not|[+\-*/%<>=&|\^~\.\(\)\{\}\[\]:;,])|.)");
