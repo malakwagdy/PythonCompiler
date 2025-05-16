@@ -288,6 +288,7 @@ vector<shared_ptr<ASTNode>> ParseTreeWidget::getNodeChildren(shared_ptr<ASTNode>
         children.push_back(expNode);
         break;
     }
+
     case NodeType::EXPRESSION: {
         auto expNode = static_cast<ExpressionNode*>(node.get());
 
@@ -307,33 +308,75 @@ vector<shared_ptr<ASTNode>> ParseTreeWidget::getNodeChildren(shared_ptr<ASTNode>
             }
         }
 
+        // Handle parenthesized expression
+        else if (expNode->expression->type == NodeType::GROUP_EXPR) {
+            auto groupExpr = static_pointer_cast<GroupExprNode>(expNode->expression);
+
+            // Add opening parenthesis
+            auto leftParenNode = make_shared<TerminalNode>("(",
+                groupExpr->line_number, groupExpr->column_number);
+            children.push_back(leftParenNode);
+
+            // Add the expression itself, wrapped in an ExpressionNode
+            auto innerExpNode = make_shared<ExpressionNode>(groupExpr->expression);
+            children.push_back(innerExpNode);
+
+            // Add closing parenthesis
+            auto rightParenNode = make_shared<TerminalNode>(")",
+                groupExpr->line_number, groupExpr->column_number);
+            children.push_back(rightParenNode);
+
+            break;
+        }
+
         // Existing code for binary expressions and other types
-        if (expNode->expression->type == NodeType::BINARY_EXPR) {
+        else if (expNode->expression->type == NodeType::BINARY_EXPR) {
             auto binary = static_cast<BinaryExprNode*>(expNode->expression.get());
 
-            // Check if left side is also a binary expression
-            if (binary->left->type == NodeType::BINARY_EXPR) {
-                // Wrap the left binary expression in an ExpressionNode to maintain hierarchy
+            // Check if left side is also a binary expression or a group expression
+            if (binary->left->type == NodeType::BINARY_EXPR ||
+                binary->left->type == NodeType::GROUP_EXPR) {
+                // Wrap in an ExpressionNode to maintain hierarchy
                 auto leftExpNode = make_shared<ExpressionNode>(binary->left);
                 children.push_back(leftExpNode);
             } else {
-                // Add left operand directly (same as current code)
+                // Add left operand directly
                 children.push_back(binary->left);
             }
 
-            // Add the operator as a terminal node (same as current code)
+            // Add the operator as a terminal node
             auto opNode = make_shared<TerminalNode>(binary->op, binary->line_number, binary->column_number);
             children.push_back(opNode);
 
-            // Check if right side is also a binary expression
-            if (binary->right->type == NodeType::BINARY_EXPR) {
-                // Wrap the right binary expression in an ExpressionNode to maintain hierarchy
+            // Check if right side is also a binary expression or a group expression
+            if (binary->right->type == NodeType::BINARY_EXPR ||
+                binary->right->type == NodeType::GROUP_EXPR) {
+                // Wrap in an ExpressionNode to maintain hierarchy
                 auto rightExpNode = make_shared<ExpressionNode>(binary->right);
                 children.push_back(rightExpNode);
             } else {
-                // Add right operand directly (same as current code)
+                // Add right operand directly
                 children.push_back(binary->right);
             }
+        } // Handle subscript expressions (bypass the "subscript" node)
+        else if (expNode->expression->type == NodeType::SUBSCRIPT_EXPR) {
+            auto subscript = static_pointer_cast<SubscriptExprNode>(expNode->expression);
+
+            // Add container directly
+            children.push_back(subscript->container);
+
+            // Add opening bracket
+            auto leftBracketNode = make_shared<TerminalNode>("[",
+                subscript->line_number, subscript->column_number);
+            children.push_back(leftBracketNode);
+
+            // Add index
+            children.push_back(subscript->index);
+
+            // Add closing bracket
+            auto rightBracketNode = make_shared<TerminalNode>("]",
+                subscript->line_number, subscript->column_number);
+            children.push_back(rightBracketNode);
         } else {
             // For non-binary and non-unary-minus expressions, just add directly
             children.push_back(expNode->expression);
@@ -344,7 +387,23 @@ vector<shared_ptr<ASTNode>> ParseTreeWidget::getNodeChildren(shared_ptr<ASTNode>
     // case NodeType::EXPRESSION: {
     //     auto expNode = static_cast<ExpressionNode*>(node.get());
     //
-    //     // Check if this expression contains a binary expression
+    //     // First check for unary minus on a literal number (negative number special case)
+    //     if (expNode->expression->type == NodeType::UNARY_EXPR) {
+    //         auto unary = static_pointer_cast<UnaryExprNode>(expNode->expression);
+    //
+    //         if (unary->op == "-" && unary->operand->type == NodeType::LITERAL) {
+    //             // Add the minus sign as a separate terminal node
+    //             auto minusNode = make_shared<TerminalNode>("-",
+    //                 unary->line_number, unary->column_number);
+    //             children.push_back(minusNode);
+    //
+    //             // Add the number as a separate node
+    //             children.push_back(unary->operand);
+    //             break;  // Important: exit the case here
+    //         }
+    //     }
+    //
+    //     // Existing code for binary expressions and other types
     //     if (expNode->expression->type == NodeType::BINARY_EXPR) {
     //         auto binary = static_cast<BinaryExprNode*>(expNode->expression.get());
     //
@@ -372,11 +431,13 @@ vector<shared_ptr<ASTNode>> ParseTreeWidget::getNodeChildren(shared_ptr<ASTNode>
     //             children.push_back(binary->right);
     //         }
     //     } else {
-    //         // For non-binary expressions, just add the expression directly (same as current code)
+    //         // For non-binary and non-unary-minus expressions, just add directly
     //         children.push_back(expNode->expression);
     //     }
     //     break;
     // }
+
+
 
         // Add this case for expression nodes
     // case NodeType::EXPRESSION: {
@@ -400,6 +461,25 @@ vector<shared_ptr<ASTNode>> ParseTreeWidget::getNodeChildren(shared_ptr<ASTNode>
     //     children.push_back(binaryNode->right);
     //     break;
     // }
+    case NodeType::GROUP_EXPR: {
+        auto groupExpr = static_cast<GroupExprNode*>(node.get());
+
+        // Add opening parenthesis as terminal node
+        auto leftParenNode = make_shared<TerminalNode>("(",
+            groupExpr->line_number, groupExpr->column_number);
+        children.push_back(leftParenNode);
+
+        // Add the expression itself, wrapped in an ExpressionNode
+        auto innerExpNode = make_shared<ExpressionNode>(groupExpr->expression);
+        children.push_back(innerExpNode);
+
+        // Add closing parenthesis as terminal node
+        auto rightParenNode = make_shared<TerminalNode>(")",
+            groupExpr->line_number, groupExpr->column_number);
+        children.push_back(rightParenNode);
+
+        break;
+    }
 
     case NodeType::COMPARISON_WRAPPER: {
         auto compWrapper = static_cast<ComparisonExprNode*>(node.get());
@@ -1114,10 +1194,31 @@ vector<shared_ptr<ASTNode>> ParseTreeWidget::getNodeChildren(shared_ptr<ASTNode>
         break;
     }
 
+    // case NodeType::SUBSCRIPT_EXPR: {
+    //     auto subscript = static_cast<SubscriptExprNode*>(node.get());
+    //     children.push_back(subscript->container);
+    //     children.push_back(subscript->index);
+    //     break;
+    // }
     case NodeType::SUBSCRIPT_EXPR: {
         auto subscript = static_cast<SubscriptExprNode*>(node.get());
+
+        // Add the container (e.g., "my_list")
         children.push_back(subscript->container);
+
+        // Add opening bracket as a terminal node
+        auto leftBracketNode = make_shared<TerminalNode>("[",
+            subscript->line_number, subscript->column_number);
+        children.push_back(leftBracketNode);
+
+        // Add the index/key
         children.push_back(subscript->index);
+
+        // Add closing bracket as a terminal node
+        auto rightBracketNode = make_shared<TerminalNode>("]",
+            subscript->line_number, subscript->column_number);
+        children.push_back(rightBracketNode);
+
         break;
     }
 
@@ -1336,10 +1437,12 @@ QString ParseTreeWidget::getNodeLabel(shared_ptr<ASTNode> node) {
         auto unary = static_pointer_cast<UnaryExprNode>(node);
         return QString::fromStdString(unary->op);
     }
+    case NodeType::GROUP_EXPR:
+        return "group";
     case NodeType::CALL_EXPR:
         return "call";
     case NodeType::SUBSCRIPT_EXPR:
-        return "[]";
+        return "subscript";
     case NodeType::ATTR_REF: {
         auto attr = static_pointer_cast<AttrRefNode>(node);
         return QString(".%1").arg(attr->attribute.c_str());

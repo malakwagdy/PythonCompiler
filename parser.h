@@ -43,6 +43,7 @@ enum class NodeType {
     SUBSCRIPT_EXPR,
     ATTR_REF,
     EXPRESSION,
+    GROUP_EXPR,
     ASSIGNMENT_WRAPPER,
     COMPARISON_WRAPPER,
 
@@ -506,6 +507,16 @@ public:
           comparison(comp) {}
 
     // Fix: Replace with direct string creation like other inline toString methods
+    std::string toString(int indent = 0) const override;
+};
+// Group expression node for parenthesized expressions (e.g., (a + b))
+class GroupExprNode : public ASTNode {
+public:
+    std::shared_ptr<ASTNode> expression;
+
+    GroupExprNode(std::shared_ptr<ASTNode> expr, int line, int col)
+        : ASTNode(NodeType::GROUP_EXPR, line, col), expression(expr) {}
+
     std::string toString(int indent = 0) const override;
 };
 

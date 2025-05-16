@@ -343,6 +343,13 @@ string ComparisonExprNode::toString(int indent) const {
     return ss.str();
 }
 
+string GroupExprNode::toString(int indent) const {
+    stringstream ss;
+    ss << getIndentation(indent) << "GroupExpr (line " << line_number << ")" << endl;
+    ss << expression->toString(indent + 1);
+    return ss.str();
+}
+
 // Parser implementation
 Parser::Parser(Lexer& lexer) : lexer(lexer), has_error(false) {
     current_token = lexer.tokens.begin();
@@ -1051,6 +1058,128 @@ string Parser::tokenTypeToString(TokenType type) {
     }
 }
 
+// shared_ptr<ASTNode> Parser::parsePrimary() {
+//     // Debug at the start to see what token we're starting with
+//     debugToken("parsePrimary start");
+//
+//     // Skip any INDENT/DEDENT tokens that appear in expressions
+//     while (check(INDENT) || check(DEDENT)) {
+//         cout << "Skipping INDENT/DEDENT in primary expression" << endl;
+//         consume();
+//     }
+//
+//     // Check for dictionary literals
+//     if (check(LBRACE)) {
+//         debugToken("Found LBRACE, about to parse dictionary");
+//         return parseDictLiteral();
+//     }
+//
+//     // Debug before checking for identifiers
+//     debugToken("Checking for identifier");
+//     // Handle identifiers
+//     if (check(IDENTIFIER) || check(FUNCTION_IDENTIFIER)) {
+//         Token id = consume();
+//         auto node = make_shared<IdentifierNode>(id.lexeme, id.line_number, id.column_number);
+//
+//         // Handle function calls: func()
+//         // if (check(LPAREN)) {
+//         //     return parseCall(node);
+//         // }
+//         // Handle parenthesized expressions
+//         if (check(LPAREN)) {
+//             Token openParen = consume(); // Consume '('
+//
+//             auto expr = parseExpression();
+//
+//             if (!check(RPAREN)) {
+//                 error("Expected ')' after expression", peek().line_number, peek().column_number);
+//                 throw runtime_error("Syntax error in parenthesized expression");
+//             }
+//             Token closeParen = consume(); // Consume ')'
+//
+//             // Create a GroupExprNode to represent the parenthesized expression
+//             return make_shared<GroupExprNode>(expr, openParen.line_number, openParen.column_number);
+//         }
+//
+//         // NEW: Check for built-in functions that should be called with parentheses
+//         if (isBuiltInFunction(id.lexeme) && (check(STRING) || check(IDENTIFIER) || check(NUMERIC))) {
+//             error("Missing parentheses in call to '" + id.lexeme + "'",
+//                   peek().line_number, peek().column_number);
+//             throw runtime_error("Syntax error in function call");
+//         }
+//
+//         // Handle attribute access: obj.attr
+//         if (check(OPERATOR) && peek().lexeme == ".") {
+//             return parseAttributeReference(node);
+//         }
+//
+//         // Handle subscripting: list[index]
+//         if (check(LBRACKET)) {
+//             return parseSubscript(node);
+//         }
+//
+//         return node;
+//     }
+//
+//     // Debug before checking for literals
+//     debugToken("Checking for literals");
+//
+//     // Handle literals: numbers
+//     if (check(NUMERIC)) {
+//         Token num = consume();
+//         string type = num.lexeme.find('.') != string::npos ? "float" : "int";
+//         return make_shared<LiteralNode>(num.lexeme, type, num.line_number, num.column_number);
+//     }
+//
+//     // Handle literals: strings
+//     if (check(STRING)) {
+//         Token str = consume();
+//         return make_shared<LiteralNode>(str.lexeme, "string", str.line_number, str.column_number);
+//     }
+//
+//     // Handle literals: booleans and None
+//     if (check(DATA_TYPE)) {
+//         Token data = consume();
+//         string type = (data.lexeme == "True" || data.lexeme == "False") ? "bool" : "None";
+//         return make_shared<LiteralNode>(data.lexeme, type, data.line_number, data.column_number);
+//     }
+//
+//     // Handle parenthesized expressions
+//     if (check(LPAREN)) {
+//         // Create a terminal node for the opening parenthesis
+//         Token openParen = consume();
+//         auto openParenNode = make_shared<TerminalNode>(openParen.lexeme, openParen.line_number, openParen.column_number);
+//
+//         auto expr = parseExpression();
+//
+//         // Create a terminal node for the closing parenthesis
+//         if (!check(RPAREN)) {
+//             error("Expected ')' after expression", peek().line_number, peek().column_number);
+//             throw runtime_error("Syntax error in parenthesized expression");
+//         }
+//         Token closeParen = consume();
+//         auto closeParenNode = make_shared<TerminalNode>(closeParen.lexeme, closeParen.line_number, closeParen.column_number);
+//
+//         // Create a container node for the parenthesized expression
+//         auto container = make_shared<StatementListNode>();
+//         container->statements.push_back(openParenNode);
+//         container->statements.push_back(expr);
+//         container->statements.push_back(closeParenNode);
+//
+//         return container;
+//     }
+//
+//     // Handle list literals
+//     if (check(LBRACKET)) {
+//         return parseListLiteral();
+//     }
+//
+//     // Add final debug before error
+//     debugToken("No valid expression found");
+//
+//     error("Expected expression", peek().line_number, peek().column_number);
+//     throw runtime_error("Unexpected token in expression");
+// }
 shared_ptr<ASTNode> Parser::parsePrimary() {
     // Debug at the start to see what token we're starting with
     debugToken("parsePrimary start");
@@ -1124,27 +1253,18 @@ shared_ptr<ASTNode> Parser::parsePrimary() {
 
     // Handle parenthesized expressions
     if (check(LPAREN)) {
-        // Create a terminal node for the opening parenthesis
-        Token openParen = consume();
-        auto openParenNode = make_shared<TerminalNode>(openParen.lexeme, openParen.line_number, openParen.column_number);
+        Token openParen = consume(); // Consume '('
 
         auto expr = parseExpression();
 
-        // Create a terminal node for the closing parenthesis
         if (!check(RPAREN)) {
             error("Expected ')' after expression", peek().line_number, peek().column_number);
             throw runtime_error("Syntax error in parenthesized expression");
         }
-        Token closeParen = consume();
-        auto closeParenNode = make_shared<TerminalNode>(closeParen.lexeme, closeParen.line_number, closeParen.column_number);
+        Token closeParen = consume(); // Consume ')'
 
-        // Create a container node for the parenthesized expression
-        auto container = make_shared<StatementListNode>();
-        container->statements.push_back(openParenNode);
-        container->statements.push_back(expr);
-        container->statements.push_back(closeParenNode);
-
-        return container;
+        // Create a GroupExprNode to represent the parenthesized expression
+        return make_shared<GroupExprNode>(expr, openParen.line_number, openParen.column_number);
     }
 
     // Handle list literals
