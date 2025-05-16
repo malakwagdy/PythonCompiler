@@ -9,17 +9,17 @@
 #include <QFile>
 #include <QString>
 #include <QDebug>
-#include <QTextBlock>        // for QTextBlock
-#include <QTextDocument>     // for QTextDocument
-#include <QTextCursor>       // for QTextCursor
-#include <QRegularExpression> //for QRegularExpression
-#include <QGraphicsScene>    // for parse tree visualization
-#include <QGraphicsEllipseItem> // for parse tree visualization
-#include <QGraphicsTextItem> // for parse tree visualization
-#include <QGraphicsLineItem> // for parse tree visualization
+#include <QTextBlock>
+#include <QTextDocument>
+#include <QTextCursor>
+#include <QRegularExpression>
+#include <QGraphicsScene>
+#include <QGraphicsEllipseItem>
+#include <QGraphicsTextItem>
+#include <QGraphicsLineItem>
 #include "lexer.h"
-#include "parser.h"          // Include the parser header
-#include "ParseTreeWidget.h" // Include the parse tree widget header
+#include "parser.h"
+#include "ParseTreeWidget.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -49,10 +49,6 @@ private slots:
     void on_actionAbout_triggered();
 
     void showStatusMessage(const QString& message, bool isError = false, int messageTimeout = 0, int styleTimeout = 5000);
-
-// public slots:
-//     // Update parse tree
-//     void updateParseTree(std::shared_ptr<ASTNode> root);
 
 private:
     Ui::MainWindow *ui;
@@ -89,16 +85,8 @@ private:
     void highlightErrors(const std::vector<Token> &tokens);
     void onErrorTableDoubleClicked(const QModelIndex &index);
 
-    // Parse tree visualization methods
+    // Parse tree visualization method
     void visualizeParseTree(std::shared_ptr<ASTNode> root);
-    // void layoutParseTreeNode(std::shared_ptr<ASTNode> node, qreal x, qreal y, qreal width, int depth, QMap<std::shared_ptr<ASTNode>, QPointF> &nodePositions);
-    // void createNodeVisual(std::shared_ptr<ASTNode> node, const QPointF &position);
-    // void createEdges(std::shared_ptr<ASTNode> parent, const QMap<std::shared_ptr<ASTNode>, QPointF> &nodePositions);
-    // QString getNodeLabel(std::shared_ptr<ASTNode> node);
-    //
-    // // Helper methods for parse tree visualization
-    // int countChildren(std::shared_ptr<ASTNode> node);
-    // void getChildren(std::shared_ptr<ASTNode> node, std::vector<std::shared_ptr<ASTNode>>& children);
 
     // Save file function used by both save actions
     bool saveFile(const QString &filePath);
