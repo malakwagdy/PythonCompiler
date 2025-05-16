@@ -415,8 +415,8 @@ void Lexer::tokenizeWord(const string &word, int start_column)
                     prev_type_in_buffer == LPAREN ) {
                     if (!is_boolean_operator && !is_data_type) {
                         is_assignment_context = true;
-                    } else if (prev_lexeme_in_buffer == "=" && is_boolean_operator) {
-                        is_assignment_context = true;
+                    // } else if (prev_lexeme_in_buffer == "=" && is_boolean_operator) {
+                    //     is_assignment_context = true;
                     } else if ( (prev_lexeme_in_buffer == "." || prev_type_in_buffer == LPAREN) && is_data_type) {
                         if (prev_lexeme_in_buffer == "."){
                             is_assignment_context = true;
