@@ -50,9 +50,9 @@ private slots:
 
     void showStatusMessage(const QString& message, bool isError = false, int messageTimeout = 0, int styleTimeout = 5000);
 
-public slots:
-    // Update parse tree
-    void updateParseTree(std::shared_ptr<ASTNode> root);
+// public slots:
+//     // Update parse tree
+//     void updateParseTree(std::shared_ptr<ASTNode> root);
 
 private:
     Ui::MainWindow *ui;
@@ -91,14 +91,14 @@ private:
 
     // Parse tree visualization methods
     void visualizeParseTree(std::shared_ptr<ASTNode> root);
-    void layoutParseTreeNode(std::shared_ptr<ASTNode> node, qreal x, qreal y, qreal width, int depth, QMap<std::shared_ptr<ASTNode>, QPointF> &nodePositions);
-    void createNodeVisual(std::shared_ptr<ASTNode> node, const QPointF &position);
-    void createEdges(std::shared_ptr<ASTNode> parent, const QMap<std::shared_ptr<ASTNode>, QPointF> &nodePositions);
-    QString getNodeLabel(std::shared_ptr<ASTNode> node);
-
-    // Helper methods for parse tree visualization
-    int countChildren(std::shared_ptr<ASTNode> node);
-    void getChildren(std::shared_ptr<ASTNode> node, std::vector<std::shared_ptr<ASTNode>>& children);
+    // void layoutParseTreeNode(std::shared_ptr<ASTNode> node, qreal x, qreal y, qreal width, int depth, QMap<std::shared_ptr<ASTNode>, QPointF> &nodePositions);
+    // void createNodeVisual(std::shared_ptr<ASTNode> node, const QPointF &position);
+    // void createEdges(std::shared_ptr<ASTNode> parent, const QMap<std::shared_ptr<ASTNode>, QPointF> &nodePositions);
+    // QString getNodeLabel(std::shared_ptr<ASTNode> node);
+    //
+    // // Helper methods for parse tree visualization
+    // int countChildren(std::shared_ptr<ASTNode> node);
+    // void getChildren(std::shared_ptr<ASTNode> node, std::vector<std::shared_ptr<ASTNode>>& children);
 
     // Save file function used by both save actions
     bool saveFile(const QString &filePath);

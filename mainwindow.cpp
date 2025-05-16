@@ -60,7 +60,6 @@ MainWindow::~MainWindow()
     delete symbolTableModel;
     delete errorTableModel;
     delete parseTreeScene;
-    // Don't delete parseTreeWidget, it's now owned by the layout
 }
 
 void MainWindow::setupTableModels()
@@ -543,198 +542,200 @@ void MainWindow::visualizeParseTree(std::shared_ptr<ASTNode> root) {
     }
 
     // Use our custom widget to display the tree
-    updateParseTree(root);
-}
-
-// Implementation of updateParseTree
-void MainWindow::updateParseTree(std::shared_ptr<ASTNode> root) {
+    // updateParseTree(root);
     parseTreeWidget->setParseTree(root);
+
 }
 
-// Keep these legacy methods for compatibility
-void MainWindow::layoutParseTreeNode(std::shared_ptr<ASTNode> node, qreal x, qreal y, qreal width, int depth, QMap<std::shared_ptr<ASTNode>, QPointF> &nodePositions)
-{
-    if (!node) return;
+// // Implementation of updateParseTree
+// void MainWindow::updateParseTree(std::shared_ptr<ASTNode> root) {
+//     parseTreeWidget->setParseTree(root);
+// }
 
-    // Store this node's position
-    nodePositions[node] = QPointF(x, y);
+// // Keep these legacy methods for compatibility
+// void MainWindow::layoutParseTreeNode(std::shared_ptr<ASTNode> node, qreal x, qreal y, qreal width, int depth, QMap<std::shared_ptr<ASTNode>, QPointF> &nodePositions)
+// {
+//     if (!node) return;
+//
+//     // Store this node's position
+//     nodePositions[node] = QPointF(x, y);
+//
+//     // Get node's children
+//     std::vector<std::shared_ptr<ASTNode>> children;
+//     getChildren(node, children);
+//
+//     int childCount = children.size();
+//     if (childCount > 0) {
+//         qreal childWidth = width / childCount;
+//         qreal startX = x - (width / 2) + (childWidth / 2);
+//
+//         for (int i = 0; i < childCount; i++) {
+//             qreal childX = startX + i * childWidth;
+//             layoutParseTreeNode(children[i], childX, y + levelHeight, childWidth, depth + 1, nodePositions);
+//         }
+//     }
+// }
 
-    // Get node's children
-    std::vector<std::shared_ptr<ASTNode>> children;
-    getChildren(node, children);
+// void MainWindow::createNodeVisual(std::shared_ptr<ASTNode> node, const QPointF &position)
+// {
+//     // Create ellipse for the node
+//     QGraphicsEllipseItem *ellipse = parseTreeScene->addEllipse(
+//         position.x() - nodeRadius,
+//         position.y() - nodeRadius,
+//         nodeRadius * 2,
+//         nodeRadius * 2
+//         );
+//
+//     // Different colors for different node types
+//     QColor nodeColor;
+//     switch (node->type) {
+//     case NodeType::PROGRAM:
+//         nodeColor = QColor(173, 216, 230); // Light blue
+//         break;
+//     case NodeType::BINARY_EXPR:
+//         nodeColor = QColor(144, 238, 144); // Light green
+//         break;
+//     case NodeType::ASSIGNMENT_STMT:
+//         nodeColor = QColor(255, 182, 193); // Light pink
+//         break;
+//     case NodeType::IDENTIFIER:
+//         nodeColor = QColor(255, 255, 224); // Light yellow
+//         break;
+//     case NodeType::LITERAL:
+//         nodeColor = QColor(221, 160, 221); // Plum
+//         break;
+//     case NodeType::CALL_EXPR:
+//         nodeColor = QColor(255, 222, 173); // Navajo white
+//         break;
+//     default:
+//         nodeColor = QColor(173, 216, 230); // Default light blue
+//     }
+//
+//     ellipse->setBrush(QBrush(nodeColor));
+//     ellipse->setPen(QPen(Qt::black));
+//
+//     // Add text label
+//     QString label = getNodeLabel(node);
+//     QGraphicsTextItem *textItem = parseTreeScene->addText(label);
+//     textItem->setDefaultTextColor(Qt::black);
+//
+//     // Center the text in the ellipse
+//     QRectF textRect = textItem->boundingRect();
+//     textItem->setPos(
+//         position.x() - textRect.width()/2,
+//         position.y() - textRect.height()/2
+//         );
+// }
+//
+// void MainWindow::createEdges(std::shared_ptr<ASTNode> parent, const QMap<std::shared_ptr<ASTNode>, QPointF> &nodePositions)
+// {
+//     if (!parent || !nodePositions.contains(parent)) return;
+//
+//     QPointF parentPos = nodePositions[parent];
+//
+//     // Get children
+//     std::vector<std::shared_ptr<ASTNode>> children;
+//     getChildren(parent, children);
+//
+//     // Create edges to each child
+//     for (auto& child : children) {
+//         if (child && nodePositions.contains(child)) {
+//             QPointF childPos = nodePositions[child];
+//             QPen edgePen(Qt::black);
+//             edgePen.setWidth(1);
+//
+//             // Draw the edge from parent to child
+//             parseTreeScene->addLine(
+//                 parentPos.x(),
+//                 parentPos.y() + nodeRadius,
+//                 childPos.x(),
+//                 childPos.y() - nodeRadius,
+//                 edgePen
+//                 );
+//
+//             // Recursive call for this child's children
+//             createEdges(child, nodePositions);
+//         }
+//     }
+// }
 
-    int childCount = children.size();
-    if (childCount > 0) {
-        qreal childWidth = width / childCount;
-        qreal startX = x - (width / 2) + (childWidth / 2);
-
-        for (int i = 0; i < childCount; i++) {
-            qreal childX = startX + i * childWidth;
-            layoutParseTreeNode(children[i], childX, y + levelHeight, childWidth, depth + 1, nodePositions);
-        }
-    }
-}
-
-void MainWindow::createNodeVisual(std::shared_ptr<ASTNode> node, const QPointF &position)
-{
-    // Create ellipse for the node
-    QGraphicsEllipseItem *ellipse = parseTreeScene->addEllipse(
-        position.x() - nodeRadius,
-        position.y() - nodeRadius,
-        nodeRadius * 2,
-        nodeRadius * 2
-        );
-
-    // Different colors for different node types
-    QColor nodeColor;
-    switch (node->type) {
-    case NodeType::PROGRAM:
-        nodeColor = QColor(173, 216, 230); // Light blue
-        break;
-    case NodeType::BINARY_EXPR:
-        nodeColor = QColor(144, 238, 144); // Light green
-        break;
-    case NodeType::ASSIGNMENT_STMT:
-        nodeColor = QColor(255, 182, 193); // Light pink
-        break;
-    case NodeType::IDENTIFIER:
-        nodeColor = QColor(255, 255, 224); // Light yellow
-        break;
-    case NodeType::LITERAL:
-        nodeColor = QColor(221, 160, 221); // Plum
-        break;
-    case NodeType::CALL_EXPR:
-        nodeColor = QColor(255, 222, 173); // Navajo white
-        break;
-    default:
-        nodeColor = QColor(173, 216, 230); // Default light blue
-    }
-
-    ellipse->setBrush(QBrush(nodeColor));
-    ellipse->setPen(QPen(Qt::black));
-
-    // Add text label
-    QString label = getNodeLabel(node);
-    QGraphicsTextItem *textItem = parseTreeScene->addText(label);
-    textItem->setDefaultTextColor(Qt::black);
-
-    // Center the text in the ellipse
-    QRectF textRect = textItem->boundingRect();
-    textItem->setPos(
-        position.x() - textRect.width()/2,
-        position.y() - textRect.height()/2
-        );
-}
-
-void MainWindow::createEdges(std::shared_ptr<ASTNode> parent, const QMap<std::shared_ptr<ASTNode>, QPointF> &nodePositions)
-{
-    if (!parent || !nodePositions.contains(parent)) return;
-
-    QPointF parentPos = nodePositions[parent];
-
-    // Get children
-    std::vector<std::shared_ptr<ASTNode>> children;
-    getChildren(parent, children);
-
-    // Create edges to each child
-    for (auto& child : children) {
-        if (child && nodePositions.contains(child)) {
-            QPointF childPos = nodePositions[child];
-            QPen edgePen(Qt::black);
-            edgePen.setWidth(1);
-
-            // Draw the edge from parent to child
-            parseTreeScene->addLine(
-                parentPos.x(),
-                parentPos.y() + nodeRadius,
-                childPos.x(),
-                childPos.y() - nodeRadius,
-                edgePen
-                );
-
-            // Recursive call for this child's children
-            createEdges(child, nodePositions);
-        }
-    }
-}
-
-QString MainWindow::getNodeLabel(std::shared_ptr<ASTNode> node)
-{
-    // Return a concise label based on node type
-    switch (node->type) {
-    case NodeType::PROGRAM:
-        return "Program";
-    case NodeType::STATEMENT_LIST:
-        return "Stmts";
-    case NodeType::BLOCK:
-        return "Block";
-    case NodeType::ASSIGNMENT_STMT:
-        return "=";
-    case NodeType::IF_STMT:
-        return "if";
-    case NodeType::ELIF_CLAUSE:
-        return "elif";
-    case NodeType::ELSE_CLAUSE:
-        return "else";
-    case NodeType::WHILE_STMT:
-        return "while";
-    case NodeType::FOR_STMT:
-        return "for";
-    case NodeType::FUNC_DEF: {
-        auto funcDef = std::static_pointer_cast<FunctionDefNode>(node);
-        return QString("def %1").arg(funcDef->name.c_str());
-    }
-    case NodeType::RETURN_STMT:
-        return "return";
-    case NodeType::IMPORT_STMT: {
-        auto import = std::static_pointer_cast<ImportNode>(node);
-        return QString("%1").arg(import->module.c_str());
-    }
-    case NodeType::BINARY_EXPR: {
-        auto binary = std::static_pointer_cast<BinaryExprNode>(node);
-        return QString::fromStdString(binary->op);
-    }
-    case NodeType::UNARY_EXPR: {
-        auto unary = std::static_pointer_cast<UnaryExprNode>(node);
-        return QString::fromStdString(unary->op);
-    }
-    case NodeType::CALL_EXPR:
-        return "call";
-    case NodeType::SUBSCRIPT_EXPR:
-        return "[]";
-    case NodeType::ATTR_REF: {
-        auto attr = std::static_pointer_cast<AttrRefNode>(node);
-        return QString(".%1").arg(attr->attribute.c_str());
-    }
-    case NodeType::IDENTIFIER: {
-        auto id = std::static_pointer_cast<IdentifierNode>(node);
-        return QString::fromStdString(id->name);
-    }
-    case NodeType::LITERAL: {
-        auto literal = std::static_pointer_cast<LiteralNode>(node);
-        QString value = QString::fromStdString(literal->value);
-        // Truncate long values
-        if (value.length() > 8) {
-            value = value.left(6) + "...";
-        }
-        return value;
-    }
-    case NodeType::LIST_LITERAL:
-        return "[ ]";
-    case NodeType::DICT_LITERAL:
-        return "{ }";
-    case NodeType::PARAM_LIST:
-        return "params";
-    case NodeType::ARG_LIST:
-        return "args";
-    case NodeType::ERROR_NODE: {
-        auto error = std::static_pointer_cast<ErrorNode>(node);
-        return "ERROR";
-    }
-    default:
-        return QString("#%1").arg(static_cast<int>(node->type));
-    }
-}
+// QString MainWindow::getNodeLabel(std::shared_ptr<ASTNode> node)
+// {
+//     // Return a concise label based on node type
+//     switch (node->type) {
+//     case NodeType::PROGRAM:
+//         return "Program";
+//     case NodeType::STATEMENT_LIST:
+//         return "Stmts";
+//     case NodeType::BLOCK:
+//         return "Block";
+//     case NodeType::ASSIGNMENT_STMT:
+//         return "=";
+//     case NodeType::IF_STMT:
+//         return "if";
+//     case NodeType::ELIF_CLAUSE:
+//         return "elif";
+//     case NodeType::ELSE_CLAUSE:
+//         return "else";
+//     case NodeType::WHILE_STMT:
+//         return "while";
+//     case NodeType::FOR_STMT:
+//         return "for";
+//     case NodeType::FUNC_DEF: {
+//         auto funcDef = std::static_pointer_cast<FunctionDefNode>(node);
+//         return QString("def %1").arg(funcDef->name.c_str());
+//     }
+//     case NodeType::RETURN_STMT:
+//         return "return";
+//     case NodeType::IMPORT_STMT: {
+//         auto import = std::static_pointer_cast<ImportNode>(node);
+//         return QString("%1").arg(import->module.c_str());
+//     }
+//     case NodeType::BINARY_EXPR: {
+//         auto binary = std::static_pointer_cast<BinaryExprNode>(node);
+//         return QString::fromStdString(binary->op);
+//     }
+//     case NodeType::UNARY_EXPR: {
+//         auto unary = std::static_pointer_cast<UnaryExprNode>(node);
+//         return QString::fromStdString(unary->op);
+//     }
+//     case NodeType::CALL_EXPR:
+//         return "call";
+//     case NodeType::SUBSCRIPT_EXPR:
+//         return "[]";
+//     case NodeType::ATTR_REF: {
+//         auto attr = std::static_pointer_cast<AttrRefNode>(node);
+//         return QString(".%1").arg(attr->attribute.c_str());
+//     }
+//     case NodeType::IDENTIFIER: {
+//         auto id = std::static_pointer_cast<IdentifierNode>(node);
+//         return QString::fromStdString(id->name);
+//     }
+//     case NodeType::LITERAL: {
+//         auto literal = std::static_pointer_cast<LiteralNode>(node);
+//         QString value = QString::fromStdString(literal->value);
+//         // Truncate long values
+//         if (value.length() > 8) {
+//             value = value.left(6) + "...";
+//         }
+//         return value;
+//     }
+//     case NodeType::LIST_LITERAL:
+//         return "[ ]";
+//     case NodeType::DICT_LITERAL:
+//         return "{ }";
+//     case NodeType::PARAM_LIST:
+//         return "params";
+//     case NodeType::ARG_LIST:
+//         return "args";
+//     case NodeType::ERROR_NODE: {
+//         auto error = std::static_pointer_cast<ErrorNode>(node);
+//         return "ERROR";
+//     }
+//     default:
+//         return QString("#%1").arg(static_cast<int>(node->type));
+//     }
+// }
 
 void MainWindow::on_actionClear_Output_triggered()
 {
@@ -785,217 +786,217 @@ void MainWindow::showStatusMessage(const QString& message, bool isError, int mes
     });
 }
 
-int MainWindow::countChildren(std::shared_ptr<ASTNode> node)
-{
-    if (!node) return 0;
-
-    switch (node->type) {
-    case NodeType::PROGRAM:
-        return static_cast<ProgramNode*>(node.get())->statements.size();
-
-    case NodeType::STATEMENT_LIST:
-        return static_cast<StatementListNode*>(node.get())->statements.size();
-
-    case NodeType::BLOCK:
-        return 1; // The statement list
-
-    case NodeType::ASSIGNMENT_STMT:
-        return 2; // Target and value
-
-    case NodeType::IF_STMT: {
-        auto ifNode = static_cast<IfNode*>(node.get());
-        return 2 + ifNode->elif_clauses.size() + (ifNode->else_block ? 1 : 0);
-    }
-
-    case NodeType::ELIF_CLAUSE:
-    case NodeType::WHILE_STMT:
-        return 2; // Condition and block
-
-    case NodeType::ELSE_CLAUSE:
-        return 1; // Block
-
-    case NodeType::FOR_STMT:
-        return 3; // Target, iterable, and block
-
-    case NodeType::FUNC_DEF:
-        return 2; // Params and body
-
-    case NodeType::RETURN_STMT:
-        return node->type == NodeType::RETURN_STMT &&
-                       static_cast<ReturnNode*>(node.get())->expression ? 1 : 0;
-
-    case NodeType::IMPORT_STMT:
-        return 0; // No child nodes
-
-    case NodeType::BINARY_EXPR:
-        return 2; // Left and right
-
-    case NodeType::UNARY_EXPR:
-        return 1; // Operand
-
-    case NodeType::CALL_EXPR:
-        return 2; // Function and arguments
-
-    case NodeType::SUBSCRIPT_EXPR:
-        return 2; // Container and index
-
-    case NodeType::ATTR_REF:
-        return 1; // Object
-
-    case NodeType::IDENTIFIER:
-    case NodeType::LITERAL:
-    case NodeType::ERROR_NODE:
-        return 0; // No child nodes
-
-    case NodeType::LIST_LITERAL:
-        return static_cast<ListNode*>(node.get())->elements.size();
-
-    case NodeType::DICT_LITERAL:
-        return 2 * static_cast<DictNode*>(node.get())->items.size(); // Key and value pairs
-
-    case NodeType::PARAM_LIST:
-        return 0; // Parameters are not nodes
-
-    case NodeType::ARG_LIST:
-        return static_cast<ArgListNode*>(node.get())->arguments.size();
-
-    default:
-        return 0;
-    }
-}
-
-void MainWindow::getChildren(std::shared_ptr<ASTNode> node, std::vector<std::shared_ptr<ASTNode>>& children)
-{
-    children.clear();
-    if (!node) return;
-
-    switch (node->type) {
-    case NodeType::PROGRAM:
-        for (auto& stmt : static_cast<ProgramNode*>(node.get())->statements) {
-            children.push_back(stmt);
-        }
-        break;
-
-    case NodeType::STATEMENT_LIST:
-        for (auto& stmt : static_cast<StatementListNode*>(node.get())->statements) {
-            children.push_back(stmt);
-        }
-        break;
-
-    case NodeType::BLOCK:
-        children.push_back(static_cast<BlockNode*>(node.get())->statements);
-        break;
-
-    case NodeType::ASSIGNMENT_STMT: {
-        auto assignment = static_cast<AssignmentNode*>(node.get());
-        children.push_back(assignment->target);
-        children.push_back(assignment->value);
-        break;
-    }
-
-    case NodeType::BINARY_EXPR: {
-        auto binary = static_cast<BinaryExprNode*>(node.get());
-        children.push_back(binary->left);
-        children.push_back(binary->right);
-        break;
-    }
-
-    case NodeType::IF_STMT: {
-        auto ifNode = static_cast<IfNode*>(node.get());
-        children.push_back(ifNode->condition);
-        children.push_back(ifNode->if_block);
-        for (auto& elif : ifNode->elif_clauses) {
-            children.push_back(elif);
-        }
-        if (ifNode->else_block) {
-            children.push_back(ifNode->else_block);
-        }
-        break;
-    }
-
-    case NodeType::ELIF_CLAUSE: {
-        auto elif = static_cast<ElifNode*>(node.get());
-        children.push_back(elif->condition);
-        children.push_back(elif->block);
-        break;
-    }
-
-    case NodeType::ELSE_CLAUSE:
-        children.push_back(static_cast<ElseNode*>(node.get())->block);
-        break;
-
-    case NodeType::WHILE_STMT: {
-        auto whileNode = static_cast<WhileNode*>(node.get());
-        children.push_back(whileNode->condition);
-        children.push_back(whileNode->block);
-        break;
-    }
-
-    case NodeType::FOR_STMT: {
-        auto forNode = static_cast<ForNode*>(node.get());
-        children.push_back(forNode->target);
-        children.push_back(forNode->iterable);
-        children.push_back(forNode->block);
-        break;
-    }
-
-    case NodeType::FUNC_DEF: {
-        auto funcDef = static_cast<FunctionDefNode*>(node.get());
-        children.push_back(funcDef->params);
-        children.push_back(funcDef->body);
-        break;
-    }
-
-    case NodeType::RETURN_STMT: {
-        auto ret = static_cast<ReturnNode*>(node.get());
-        if (ret->expression) {
-            children.push_back(ret->expression);
-        }
-        break;
-    }
-
-    case NodeType::UNARY_EXPR:
-        children.push_back(static_cast<UnaryExprNode*>(node.get())->operand);
-        break;
-
-    case NodeType::CALL_EXPR: {
-        auto call = static_cast<CallExprNode*>(node.get());
-        children.push_back(call->function);
-        children.push_back(call->arguments);
-        break;
-    }
-
-    case NodeType::SUBSCRIPT_EXPR: {
-        auto subscript = static_cast<SubscriptExprNode*>(node.get());
-        children.push_back(subscript->container);
-        children.push_back(subscript->index);
-        break;
-    }
-
-    case NodeType::ATTR_REF:
-        children.push_back(static_cast<AttrRefNode*>(node.get())->object);
-        break;
-
-    case NodeType::LIST_LITERAL:
-        for (auto& elem : static_cast<ListNode*>(node.get())->elements) {
-            children.push_back(elem);
-        }
-        break;
-
-    case NodeType::DICT_LITERAL:
-        for (auto& item : static_cast<DictNode*>(node.get())->items) {
-            children.push_back(item.first);
-            children.push_back(item.second);
-        }
-        break;
-
-    case NodeType::ARG_LIST:
-        for (auto& arg : static_cast<ArgListNode*>(node.get())->arguments) {
-            children.push_back(arg);
-        }
-        break;
-
-    default:
-        break;
-    }
-}
+// int MainWindow::countChildren(std::shared_ptr<ASTNode> node)
+// {
+//     if (!node) return 0;
+//
+//     switch (node->type) {
+//     case NodeType::PROGRAM:
+//         return static_cast<ProgramNode*>(node.get())->statements.size();
+//
+//     case NodeType::STATEMENT_LIST:
+//         return static_cast<StatementListNode*>(node.get())->statements.size();
+//
+//     case NodeType::BLOCK:
+//         return 1; // The statement list
+//
+//     case NodeType::ASSIGNMENT_STMT:
+//         return 2; // Target and value
+//
+//     case NodeType::IF_STMT: {
+//         auto ifNode = static_cast<IfNode*>(node.get());
+//         return 2 + ifNode->elif_clauses.size() + (ifNode->else_block ? 1 : 0);
+//     }
+//
+//     case NodeType::ELIF_CLAUSE:
+//     case NodeType::WHILE_STMT:
+//         return 2; // Condition and block
+//
+//     case NodeType::ELSE_CLAUSE:
+//         return 1; // Block
+//
+//     case NodeType::FOR_STMT:
+//         return 3; // Target, iterable, and block
+//
+//     case NodeType::FUNC_DEF:
+//         return 2; // Params and body
+//
+//     case NodeType::RETURN_STMT:
+//         return node->type == NodeType::RETURN_STMT &&
+//                        static_cast<ReturnNode*>(node.get())->expression ? 1 : 0;
+//
+//     case NodeType::IMPORT_STMT:
+//         return 0; // No child nodes
+//
+//     case NodeType::BINARY_EXPR:
+//         return 2; // Left and right
+//
+//     case NodeType::UNARY_EXPR:
+//         return 1; // Operand
+//
+//     case NodeType::CALL_EXPR:
+//         return 2; // Function and arguments
+//
+//     case NodeType::SUBSCRIPT_EXPR:
+//         return 2; // Container and index
+//
+//     case NodeType::ATTR_REF:
+//         return 1; // Object
+//
+//     case NodeType::IDENTIFIER:
+//     case NodeType::LITERAL:
+//     case NodeType::ERROR_NODE:
+//         return 0; // No child nodes
+//
+//     case NodeType::LIST_LITERAL:
+//         return static_cast<ListNode*>(node.get())->elements.size();
+//
+//     case NodeType::DICT_LITERAL:
+//         return 2 * static_cast<DictNode*>(node.get())->items.size(); // Key and value pairs
+//
+//     case NodeType::PARAM_LIST:
+//         return 0; // Parameters are not nodes
+//
+//     case NodeType::ARG_LIST:
+//         return static_cast<ArgListNode*>(node.get())->arguments.size();
+//
+//     default:
+//         return 0;
+//     }
+// }
+//
+// void MainWindow::getChildren(std::shared_ptr<ASTNode> node, std::vector<std::shared_ptr<ASTNode>>& children)
+// {
+//     children.clear();
+//     if (!node) return;
+//
+//     switch (node->type) {
+//     case NodeType::PROGRAM:
+//         for (auto& stmt : static_cast<ProgramNode*>(node.get())->statements) {
+//             children.push_back(stmt);
+//         }
+//         break;
+//
+//     case NodeType::STATEMENT_LIST:
+//         for (auto& stmt : static_cast<StatementListNode*>(node.get())->statements) {
+//             children.push_back(stmt);
+//         }
+//         break;
+//
+//     case NodeType::BLOCK:
+//         children.push_back(static_cast<BlockNode*>(node.get())->statements);
+//         break;
+//
+//     case NodeType::ASSIGNMENT_STMT: {
+//         auto assignment = static_cast<AssignmentNode*>(node.get());
+//         children.push_back(assignment->target);
+//         children.push_back(assignment->value);
+//         break;
+//     }
+//
+//     case NodeType::BINARY_EXPR: {
+//         auto binary = static_cast<BinaryExprNode*>(node.get());
+//         children.push_back(binary->left);
+//         children.push_back(binary->right);
+//         break;
+//     }
+//
+//     case NodeType::IF_STMT: {
+//         auto ifNode = static_cast<IfNode*>(node.get());
+//         children.push_back(ifNode->condition);
+//         children.push_back(ifNode->if_block);
+//         for (auto& elif : ifNode->elif_clauses) {
+//             children.push_back(elif);
+//         }
+//         if (ifNode->else_block) {
+//             children.push_back(ifNode->else_block);
+//         }
+//         break;
+//     }
+//
+//     case NodeType::ELIF_CLAUSE: {
+//         auto elif = static_cast<ElifNode*>(node.get());
+//         children.push_back(elif->condition);
+//         children.push_back(elif->block);
+//         break;
+//     }
+//
+//     case NodeType::ELSE_CLAUSE:
+//         children.push_back(static_cast<ElseNode*>(node.get())->block);
+//         break;
+//
+//     case NodeType::WHILE_STMT: {
+//         auto whileNode = static_cast<WhileNode*>(node.get());
+//         children.push_back(whileNode->condition);
+//         children.push_back(whileNode->block);
+//         break;
+//     }
+//
+//     case NodeType::FOR_STMT: {
+//         auto forNode = static_cast<ForNode*>(node.get());
+//         children.push_back(forNode->target);
+//         children.push_back(forNode->iterable);
+//         children.push_back(forNode->block);
+//         break;
+//     }
+//
+//     case NodeType::FUNC_DEF: {
+//         auto funcDef = static_cast<FunctionDefNode*>(node.get());
+//         children.push_back(funcDef->params);
+//         children.push_back(funcDef->body);
+//         break;
+//     }
+//
+//     case NodeType::RETURN_STMT: {
+//         auto ret = static_cast<ReturnNode*>(node.get());
+//         if (ret->expression) {
+//             children.push_back(ret->expression);
+//         }
+//         break;
+//     }
+//
+//     case NodeType::UNARY_EXPR:
+//         children.push_back(static_cast<UnaryExprNode*>(node.get())->operand);
+//         break;
+//
+//     case NodeType::CALL_EXPR: {
+//         auto call = static_cast<CallExprNode*>(node.get());
+//         children.push_back(call->function);
+//         children.push_back(call->arguments);
+//         break;
+//     }
+//
+//     case NodeType::SUBSCRIPT_EXPR: {
+//         auto subscript = static_cast<SubscriptExprNode*>(node.get());
+//         children.push_back(subscript->container);
+//         children.push_back(subscript->index);
+//         break;
+//     }
+//
+//     case NodeType::ATTR_REF:
+//         children.push_back(static_cast<AttrRefNode*>(node.get())->object);
+//         break;
+//
+//     case NodeType::LIST_LITERAL:
+//         for (auto& elem : static_cast<ListNode*>(node.get())->elements) {
+//             children.push_back(elem);
+//         }
+//         break;
+//
+//     case NodeType::DICT_LITERAL:
+//         for (auto& item : static_cast<DictNode*>(node.get())->items) {
+//             children.push_back(item.first);
+//             children.push_back(item.second);
+//         }
+//         break;
+//
+//     case NodeType::ARG_LIST:
+//         for (auto& arg : static_cast<ArgListNode*>(node.get())->arguments) {
+//             children.push_back(arg);
+//         }
+//         break;
+//
+//     default:
+//         break;
+//     }
+// }
