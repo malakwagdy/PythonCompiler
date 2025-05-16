@@ -229,22 +229,22 @@ vector<shared_ptr<ASTNode>> ParseTreeWidget::getNodeChildren(shared_ptr<ASTNode>
     case NodeType::STATEMENT: {
         auto stmtNode = static_cast<StatementNode*>(node.get());
 
-        // Special handling for return statements
-        if (stmtNode->statement->type == NodeType::RETURN_STMT) {
-            auto returnNode = static_pointer_cast<ReturnNode>(stmtNode->statement);
-
-            // Add "return" keyword as a terminal node
-            auto returnKeyword = make_shared<TerminalNode>("return",
-                returnNode->line_number, returnNode->column_number);
-            children.push_back(returnKeyword);
-
-            // Add the expression directly (if it exists)
-            if (returnNode->expression) {
-                children.push_back(returnNode->expression);
-            }
-        }
+        // // Special handling for return statements
+        // if (stmtNode->statement->type == NodeType::RETURN_STMT) {
+        //     auto returnNode = static_pointer_cast<ReturnNode>(stmtNode->statement);
+        //
+        //     // Add "return" keyword as a terminal node
+        //     auto returnKeyword = make_shared<TerminalNode>("return",
+        //         returnNode->line_number, returnNode->column_number);
+        //     children.push_back(returnKeyword);
+        //
+        //     // Add the expression directly (if it exists)
+        //     if (returnNode->expression) {
+        //         children.push_back(returnNode->expression);
+        //     }
+        // }
         // Add back special handling for assignment statements
-        else if (stmtNode->statement->type == NodeType::ASSIGNMENT_STMT) {
+        if (stmtNode->statement->type == NodeType::ASSIGNMENT_STMT) {
             auto assignNode = static_pointer_cast<AssignmentNode>(stmtNode->statement);
             auto assignStmtNode = make_shared<AssignStmtNode>(stmtNode->statement);
             children.push_back(assignStmtNode);
@@ -790,12 +790,29 @@ vector<shared_ptr<ASTNode>> ParseTreeWidget::getNodeChildren(shared_ptr<ASTNode>
         break;
     }
 
+    // case NodeType::RETURN_STMT: {
+    //     // auto ret = static_cast<ReturnNode*>(node.get());
+    //     // if (ret->expression) {
+    //     //     children.push_back(ret->expression);
+    //     // }
+    //     break;
+    // }
+
     case NodeType::RETURN_STMT: {
-        // auto ret = static_cast<ReturnNode*>(node.get());
-        // if (ret->expression) {
-        //     children.push_back(ret->expression);
-        // }
-        break;
+            auto returnNode = static_cast<ReturnNode*>(node.get());
+
+            // Add "return" keyword as a terminal node
+            auto returnKeyword = make_shared<TerminalNode>("return",
+                returnNode->line_number, returnNode->column_number);
+            children.push_back(returnKeyword);
+
+            // If there's an expression, wrap it in an ExpressionNode
+            if (returnNode->expression) {
+                auto expNode = make_shared<ExpressionNode>(returnNode->expression);
+                children.push_back(expNode);
+            }
+
+            break;
     }
 
     case NodeType::UNARY_EXPR:
@@ -1038,7 +1055,7 @@ QString ParseTreeWidget::getNodeLabel(shared_ptr<ASTNode> node) {
     case NodeType::FUNC_DEF:
         return "Function";
     case NodeType::RETURN_STMT:
-        return "return";
+        return "return-stmt";
     case NodeType::IMPORT_STMT: {
         auto import = static_pointer_cast<ImportNode>(node);
         return QString("%1").arg(import->module.c_str());
