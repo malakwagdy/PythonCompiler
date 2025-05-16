@@ -46,6 +46,7 @@ void ParseTreeWidget::paintEvent(QPaintEvent *event) {
         drawNode(painter, root, 0, 0, 0);
     } else {
         // Draw a message if no tree is available
+        painter.setPen(Qt::black);
         painter.drawText(rect(), Qt::AlignCenter, "No parse tree to display");
     }
 }
@@ -180,11 +181,6 @@ vector<shared_ptr<ASTNode>> ParseTreeWidget::getNodeChildren(shared_ptr<ASTNode>
     if (!node) return children;
 
     switch (node->type) {
-    // case NodeType::PROGRAM:
-    //     for (auto& stmt : static_cast<ProgramNode*>(node.get())->statements) {
-    //         children.push_back(stmt);
-    //     }
-    //     break;
     case NodeType::PROGRAM: {
         for (auto& stmt : static_cast<ProgramNode*>(node.get())->statements) {
             // Check if this is an expression or assignment used as a statement
@@ -229,18 +225,7 @@ vector<shared_ptr<ASTNode>> ParseTreeWidget::getNodeChildren(shared_ptr<ASTNode>
         }
         break;
     }
-    // case NodeType::STATEMENT: {
-    //     auto stmtNode = static_cast<StatementNode*>(node.get());
-    //     // If this is an assignment statement, create the assign-stmt wrapper
-    //     if (stmtNode->statement->type == NodeType::ASSIGNMENT_STMT) {
-    //         auto assignStmtNode = make_shared<AssignStmtNode>(stmtNode->statement);
-    //         children.push_back(assignStmtNode);
-    //     } else {
-    //         // For other statement types, continue as before
-    //         children.push_back(stmtNode->statement);
-    //     }
-    //     break;
-    // }
+
     case NodeType::STATEMENT: {
         auto stmtNode = static_cast<StatementNode*>(node.get());
 
@@ -292,20 +277,24 @@ vector<shared_ptr<ASTNode>> ParseTreeWidget::getNodeChildren(shared_ptr<ASTNode>
     case NodeType::EXPRESSION: {
         auto expNode = static_cast<ExpressionNode*>(node.get());
 
-        // First check for unary minus on a literal number (negative number special case)
-        if (expNode->expression->type == NodeType::UNARY_EXPR) {
-            auto unary = static_pointer_cast<UnaryExprNode>(expNode->expression);
+            if (expNode->expression->type == NodeType::UNARY_EXPR) {
+                auto unary = static_pointer_cast<UnaryExprNode>(expNode->expression);
 
-            if (unary->op == "-" && unary->operand->type == NodeType::LITERAL) {
-                // Add the minus sign as a separate terminal node
-                auto minusNode = make_shared<TerminalNode>("-",
-                    unary->line_number, unary->column_number);
-                children.push_back(minusNode);
-
-                // Add the number as a separate node
-                children.push_back(unary->operand);
-                break;  // Important: exit the case here
-            }
+                // Handle ALL unary minus expressions, not just for literals
+                if (unary->op == "-") {
+                    auto minusNode = make_shared<TerminalNode>("-",
+                        unary->line_number, unary->column_number);
+                    children.push_back(minusNode);
+                    children.push_back(unary->operand);
+                    break;
+                } else if (unary->op == "not") {
+                    // Keep existing handling for "not" operator
+                    auto notNode = make_shared<TerminalNode>("not",
+                        unary->line_number, unary->column_number);
+                    children.push_back(notNode);
+                    children.push_back(unary->operand);
+                    break;
+                }
         }
 
         // Handle parenthesized expression
@@ -384,83 +373,6 @@ vector<shared_ptr<ASTNode>> ParseTreeWidget::getNodeChildren(shared_ptr<ASTNode>
         break;
     }
 
-    // case NodeType::EXPRESSION: {
-    //     auto expNode = static_cast<ExpressionNode*>(node.get());
-    //
-    //     // First check for unary minus on a literal number (negative number special case)
-    //     if (expNode->expression->type == NodeType::UNARY_EXPR) {
-    //         auto unary = static_pointer_cast<UnaryExprNode>(expNode->expression);
-    //
-    //         if (unary->op == "-" && unary->operand->type == NodeType::LITERAL) {
-    //             // Add the minus sign as a separate terminal node
-    //             auto minusNode = make_shared<TerminalNode>("-",
-    //                 unary->line_number, unary->column_number);
-    //             children.push_back(minusNode);
-    //
-    //             // Add the number as a separate node
-    //             children.push_back(unary->operand);
-    //             break;  // Important: exit the case here
-    //         }
-    //     }
-    //
-    //     // Existing code for binary expressions and other types
-    //     if (expNode->expression->type == NodeType::BINARY_EXPR) {
-    //         auto binary = static_cast<BinaryExprNode*>(expNode->expression.get());
-    //
-    //         // Check if left side is also a binary expression
-    //         if (binary->left->type == NodeType::BINARY_EXPR) {
-    //             // Wrap the left binary expression in an ExpressionNode to maintain hierarchy
-    //             auto leftExpNode = make_shared<ExpressionNode>(binary->left);
-    //             children.push_back(leftExpNode);
-    //         } else {
-    //             // Add left operand directly (same as current code)
-    //             children.push_back(binary->left);
-    //         }
-    //
-    //         // Add the operator as a terminal node (same as current code)
-    //         auto opNode = make_shared<TerminalNode>(binary->op, binary->line_number, binary->column_number);
-    //         children.push_back(opNode);
-    //
-    //         // Check if right side is also a binary expression
-    //         if (binary->right->type == NodeType::BINARY_EXPR) {
-    //             // Wrap the right binary expression in an ExpressionNode to maintain hierarchy
-    //             auto rightExpNode = make_shared<ExpressionNode>(binary->right);
-    //             children.push_back(rightExpNode);
-    //         } else {
-    //             // Add right operand directly (same as current code)
-    //             children.push_back(binary->right);
-    //         }
-    //     } else {
-    //         // For non-binary and non-unary-minus expressions, just add directly
-    //         children.push_back(expNode->expression);
-    //     }
-    //     break;
-    // }
-
-
-
-        // Add this case for expression nodes
-    // case NodeType::EXPRESSION: {
-    //     auto expNode = static_cast<ExpressionNode*>(node.get());
-    //     children.push_back(expNode->expression);
-    // break;
-    // }
-        // Add this case after the EXPRESSION case
-    // case NodeType::COMPARISON_WRAPPER: {
-    //     auto compWrapper = static_cast<ComparisonExprNode*>(node.get());
-    //     auto binaryNode = static_pointer_cast<BinaryExprNode>(compWrapper->comparison);
-    //
-    //     // Add left operand
-    //     children.push_back(binaryNode->left);
-    //
-    //     // Add operator as a terminal node
-    //     auto opNode = make_shared<TerminalNode>(binaryNode->op, binaryNode->line_number, binaryNode->column_number);
-    //     children.push_back(opNode);
-    //
-    //     // Add right operand
-    //     children.push_back(binaryNode->right);
-    //     break;
-    // }
     case NodeType::GROUP_EXPR: {
         auto groupExpr = static_cast<GroupExprNode*>(node.get());
 
@@ -504,20 +416,6 @@ vector<shared_ptr<ASTNode>> ParseTreeWidget::getNodeChildren(shared_ptr<ASTNode>
         break;
     }
 
-    // case NodeType::STATEMENT: {
-    // auto stmtNode = static_cast<StatementNode*>(node.get());
-    // children.push_back(stmtNode->statement);
-    // break;
-    // }
-    // case NodeType::STATEMENT_LIST:
-    //     for (auto& stmt : static_cast<StatementListNode*>(node.get())->statements) {
-    //         children.push_back(stmt);
-    //     }
-    //     break;
-
-    // case NodeType::BLOCK:
-    //     children.push_back(static_cast<BlockNode*>(node.get())->statements);
-    //     break;
     case NodeType::BLOCK: {
         auto blockNode = static_cast<BlockNode*>(node.get());
 
@@ -549,12 +447,6 @@ vector<shared_ptr<ASTNode>> ParseTreeWidget::getNodeChildren(shared_ptr<ASTNode>
         break;
     }
 
-    // case NodeType::ASSIGNMENT_STMT: {
-    //     auto assignment = static_cast<AssignmentNode*>(node.get());
-    //     children.push_back(assignment->target);
-    //     children.push_back(assignment->value);
-    //     break;
-    // }
         // This is what you should use - it matches your NodeType enum
     case NodeType::ASSIGNMENT_STMT: {
         auto assignWrapper = static_cast<AssignStmtNode*>(node.get());
@@ -595,75 +487,7 @@ vector<shared_ptr<ASTNode>> ParseTreeWidget::getNodeChildren(shared_ptr<ASTNode>
         }
         break;
     }
-    // case NodeType::BINARY_EXPR: {
-    //     auto binary = static_cast<BinaryExprNode*>(node.get());
-    //     children.push_back(binary->left);
-    //     children.push_back(binary->right);
-    //     break;
-    // }
 
-    // case NodeType::IF_STMT: {
-    //     auto ifNode = static_cast<IfNode*>(node.get());
-    //
-    //     // Create a virtual condition node
-    //     auto conditionNode = make_shared<ConditionNode>(
-    //         ifNode->condition, ifNode->line_number, ifNode->column_number);
-    //
-    //     // Add the condition node as a child (instead of the condition directly)
-    //     children.push_back(conditionNode);
-    //
-    //     // Add the if block
-    //     children.push_back(ifNode->if_block);
-    //
-    //     // Add else and elif clauses as before
-    //     for (auto& elif : ifNode->elif_clauses) {
-    //         children.push_back(elif);
-    //     }
-    //     if (ifNode->else_block) {
-    //         children.push_back(ifNode->else_block);
-    //     }
-    //     break;
-    // }
-    // Update the IF_STMT case in getNodeChildren
-    // case NodeType::IF_STMT: {
-    //     auto ifNode = static_cast<IfNode*>(node.get());
-    //
-    //     // Create a terminal node for "if" keyword
-    //     auto ifKeywordNode = make_shared<TerminalNode>("if", ifNode->line_number, ifNode->column_number);
-    //     children.push_back(ifKeywordNode);
-    //
-    //     // Add left parenthesis if present
-    //     if (ifNode->hasParentheses) {
-    //         auto leftParenNode = make_shared<TerminalNode>("(", ifNode->line_number, ifNode->column_number);
-    //         children.push_back(leftParenNode);
-    //     }
-    //
-    //     // Add condition
-    //     children.push_back(ifNode->condition);
-    //
-    //     // Add right parenthesis if present
-    //     if (ifNode->hasParentheses) {
-    //         auto rightParenNode = make_shared<TerminalNode>(")", ifNode->line_number, ifNode->column_number);
-    //         children.push_back(rightParenNode);
-    //     }
-    //
-    //     // Add colon
-    //     auto colonNode = make_shared<TerminalNode>(":", ifNode->line_number, ifNode->column_number);
-    //     children.push_back(colonNode);
-    //
-    //     // Add the if block
-    //     children.push_back(ifNode->if_block);
-    //
-    //     // Create an else-part node if we have any elif or else clauses
-    //     if (!ifNode->elif_clauses.empty() || ifNode->else_block) {
-    //         auto elsePartNode = make_shared<ElsePartNode>(
-    //             ifNode->elif_clauses,
-    //             dynamic_pointer_cast<ElseNode>(ifNode->else_block),
-    //             ifNode->line_number, ifNode->column_number);
-    //         children.push_back(elsePartNode);
-    //     }
-    //     break;
-    // }
     case NodeType::IF_STMT: {
         auto ifNode = static_cast<IfNode*>(node.get());
 
@@ -705,83 +529,7 @@ vector<shared_ptr<ASTNode>> ParseTreeWidget::getNodeChildren(shared_ptr<ASTNode>
         }
         break;
     }
-    // Add a new case for ELSE_PART
-    // case NodeType::ELSE_PART: {
-    //     auto elsePart = static_cast<ElsePartNode*>(node.get());
-    //
-    //     // Add elif clauses directly (not recursively)
-    //     for (auto& elif : elsePart->elif_clauses) {
-    //         children.push_back(elif);
-    //     }
-    //
-    //     // Add else block if present
-    //     if (elsePart->else_block) {
-    //         children.push_back(elsePart->else_block);
-    //     }
-    //
-    //     break;
-    // }
-    // case NodeType::ELSE_PART: {
-    //     auto elsePart = static_cast<ElsePartNode*>(node.get());
-    //
-    //     // If we have elif clauses, handle them specially
-    //     if (!elsePart->elif_clauses.empty()) {
-    //         // Get the first elif clause
-    //         auto& firstElif = elsePart->elif_clauses[0];
-    //
-    //         // Create a terminal node for "elif" keyword
-    //         auto elifKeywordNode = make_shared<TerminalNode>("elif", firstElif->line_number, firstElif->column_number);
-    //         children.push_back(elifKeywordNode);
-    //
-    //         // Add left parenthesis if present (assuming ElifNode also has hasParentheses)
-    //         if (firstElif->hasParentheses) {
-    //             auto leftParenNode = make_shared<TerminalNode>("(", firstElif->line_number, firstElif->column_number);
-    //             children.push_back(leftParenNode);
-    //         }
-    //
-    //         // Create a condition wrapper node for the elif
-    //         auto conditionNode = make_shared<ConditionNode>(
-    //             firstElif->condition, firstElif->line_number, firstElif->column_number);
-    //         children.push_back(conditionNode);
-    //
-    //         // Add right parenthesis if present
-    //         if (firstElif->hasParentheses) {
-    //             auto rightParenNode = make_shared<TerminalNode>(")", firstElif->line_number, firstElif->column_number);
-    //             children.push_back(rightParenNode);
-    //         }
-    //
-    //         // Add colon
-    //         auto colonNode = make_shared<TerminalNode>(":", firstElif->line_number, firstElif->column_number);
-    //         children.push_back(colonNode);
-    //
-    //         // Add the elif block
-    //         children.push_back(firstElif->block);
-    //
-    //         // If there are more elifs or an else, create a new ElsePartNode for them
-    //         if (elsePart->elif_clauses.size() > 1 || elsePart->else_block) {
-    //             // Create a vector with remaining elifs (skipping the first one)
-    //             vector<shared_ptr<ElifNode>> remainingElifs;
-    //             for (size_t i = 1; i < elsePart->elif_clauses.size(); i++) {
-    //                 remainingElifs.push_back(elsePart->elif_clauses[i]);
-    //             }
-    //
-    //             // Create a new ElsePartNode for the remaining elifs and the else block
-    //             auto nestedElsePart = make_shared<ElsePartNode>(
-    //                 remainingElifs,
-    //                 elsePart->else_block,
-    //                 firstElif->line_number,
-    //                 firstElif->column_number);
-    //
-    //             children.push_back(nestedElsePart);
-    //         }
-    //     }
-    //     // If no elif clauses but we have an else, add it directly
-    //     else if (elsePart->else_block) {
-    //         children.push_back(elsePart->else_block);
-    //     }
-    //
-    //     break;
-    // }
+
     case NodeType::ELSE_PART: {
         auto elsePart = static_cast<ElsePartNode*>(node.get());
 
@@ -855,28 +603,6 @@ vector<shared_ptr<ASTNode>> ParseTreeWidget::getNodeChildren(shared_ptr<ASTNode>
         break;
     }
 
-    // case NodeType::CONDITION_NODE: {
-    //     auto condNode = static_cast<ConditionNode*>(node.get());
-    //     if (condNode->condition) {
-    //         // Check if this is a binary expression with a comparison operator
-    //         if (condNode->condition->type == NodeType::BINARY_EXPR) {
-    //             auto binary = static_cast<BinaryExprNode*>(condNode->condition.get());
-    //             if (isComparisonOperator(binary->op)) {
-    //                 // Wrap it in a ComparisonExprNode
-    //                 auto compNode = make_shared<ComparisonExprNode>(
-    //                     make_shared<BinaryExprNode>(*binary));
-    //                 children.push_back(compNode);
-    //             } else {
-    //                 // Regular binary expression
-    //                 children.push_back(condNode->condition);
-    //             }
-    //         } else {
-    //             // Not a binary expression
-    //             children.push_back(condNode->condition);
-    //         }
-    //     }
-    //     break;
-    // }
     case NodeType::CONDITION_NODE: {
         auto condNode = static_cast<ConditionNode*>(node.get());
         if (condNode->condition) {
@@ -932,14 +658,6 @@ vector<shared_ptr<ASTNode>> ParseTreeWidget::getNodeChildren(shared_ptr<ASTNode>
         break;
     }
 
-    // case NodeType::CONDITION_NODE: {
-    //     auto condNode = static_cast<ConditionNode*>(node.get());
-    //     if (condNode->condition) {
-    //         children.push_back(condNode->condition);
-    //     }
-    //     break;
-    // }
-
     case NodeType::ELIF_CLAUSE: {
         auto elif = static_cast<ElifNode*>(node.get());
 
@@ -956,18 +674,6 @@ vector<shared_ptr<ASTNode>> ParseTreeWidget::getNodeChildren(shared_ptr<ASTNode>
         children.push_back(static_cast<ElseNode*>(node.get())->block);
         break;
 
-    // case NodeType::WHILE_STMT: {
-    //     auto whileNode = static_cast<WhileNode*>(node.get());
-    //
-    //     // Create a virtual condition node
-    //     auto conditionNode = make_shared<ConditionNode>(
-    //         whileNode->condition, whileNode->line_number, whileNode->column_number);
-    //
-    //     // Add the condition node and block
-    //     children.push_back(conditionNode);
-    //     children.push_back(whileNode->block);
-    //     break;
-    // }
     case NodeType::WHILE_STMT: {
         auto whileNode = static_cast<WhileNode*>(node.get());
 
@@ -1038,49 +744,6 @@ vector<shared_ptr<ASTNode>> ParseTreeWidget::getNodeChildren(shared_ptr<ASTNode>
         children.push_back(forNode->block);
         break;
     }
-    // case NodeType::FOR_STMT: {
-    //     auto forNode = static_cast<ForNode*>(node.get());
-    //     children.push_back(forNode->target);
-    //     children.push_back(forNode->iterable);
-    //     children.push_back(forNode->block);
-    //     break;
-    // }
-
-    // case NodeType::FUNC_DEF: {
-    //     auto funcDef = static_cast<FunctionDefNode*>(node.get());
-    //     children.push_back(funcDef->params);
-    //     children.push_back(funcDef->body);
-    //     break;
-    // }
-
-    // case NodeType::FUNC_DEF: {
-    // auto funcDef = static_cast<FunctionDefNode*>(node.get());
-    //
-    // // Display in order: "def name ( params ) : body"
-    // // First show the name (which is part of the node label)
-    //
-    // // Then open parenthesis
-    // if (funcDef->openParen) {
-    //     children.push_back(funcDef->openParen);
-    // }
-    //
-    // // Then params
-    // children.push_back(funcDef->params);
-    //
-    // // Then close parenthesis
-    // if (funcDef->closeParen) {
-    //     children.push_back(funcDef->closeParen);
-    // }
-    //
-    // // Then colon
-    // if (funcDef->colon) {
-    //     children.push_back(funcDef->colon);
-    // }
-    //
-    // // Then body
-    // children.push_back(funcDef->body);
-    // break;
-    // }
 
         // Update the FUNC_DEF case in getNodeChildren
         case NodeType::FUNC_DEF: {
@@ -1139,28 +802,6 @@ vector<shared_ptr<ASTNode>> ParseTreeWidget::getNodeChildren(shared_ptr<ASTNode>
         children.push_back(static_cast<UnaryExprNode*>(node.get())->operand);
         break;
 
-    // case NodeType::CALL_EXPR: {
-    //     auto call = static_cast<CallExprNode*>(node.get());
-    //     children.push_back(call->function);
-    //     children.push_back(call->arguments);
-    //     break;
-    // }
-
-    // case NodeType::CALL_EXPR: {
-    //     auto call = static_cast<CallExprNode*>(node.get());
-    //     // Changed order: Function first, then open parenthesis
-    //     children.push_back(call->function);
-    //     if (call->openParen) {
-    //         children.push_back(call->openParen);
-    //     }
-    //     // Then arguments
-    //     children.push_back(call->arguments);
-    //     // Then close parenthesis
-    //     if (call->closeParen) {
-    //         children.push_back(call->closeParen);
-    //     }
-    //     break;
-    // }
     case NodeType::CALL_EXPR: {
         auto call = static_cast<CallExprNode*>(node.get());
 
@@ -1194,12 +835,6 @@ vector<shared_ptr<ASTNode>> ParseTreeWidget::getNodeChildren(shared_ptr<ASTNode>
         break;
     }
 
-    // case NodeType::SUBSCRIPT_EXPR: {
-    //     auto subscript = static_cast<SubscriptExprNode*>(node.get());
-    //     children.push_back(subscript->container);
-    //     children.push_back(subscript->index);
-    //     break;
-    // }
     case NodeType::SUBSCRIPT_EXPR: {
         auto subscript = static_cast<SubscriptExprNode*>(node.get());
 
@@ -1226,124 +861,112 @@ vector<shared_ptr<ASTNode>> ParseTreeWidget::getNodeChildren(shared_ptr<ASTNode>
         children.push_back(static_cast<AttrRefNode*>(node.get())->object);
         break;
 
+    case NodeType::LIST_LITERAL: {
+            auto listNode = static_cast<ListNode*>(node.get());
+            for (auto& elem : listNode->elements) {
+                // Check if this is a unary minus expression
+                if (elem->type == NodeType::UNARY_EXPR) {
+                    auto unary = static_pointer_cast<UnaryExprNode>(elem);
 
-    case NodeType::LIST_LITERAL:
-        for (auto& elem : static_cast<ListNode*>(node.get())->elements) {
-            children.push_back(elem);
-        }
-        break;
+                    // Handle all unary minus expressions, not just on literals
+                    if (unary->op == "-") {
+                        // Add the minus sign as a separate terminal node
+                        auto minusNode = make_shared<TerminalNode>("-",
+                            unary->line_number, unary->column_number);
+                        children.push_back(minusNode);
 
-    // case NodeType::DICT_LITERAL:
-    //     for (auto& item : static_cast<DictNode*>(node.get())->items) {
-    //         children.push_back(item.first);
-    //         children.push_back(item.second);
-    //     }
-    //     break;
-    case NodeType::DICT_LITERAL: {
-        auto dictNode = static_cast<DictNode*>(node.get());
-
-        for (const auto& item : dictNode->items) {
-            // Only add non-null children
-            if (item.first) {
-                children.push_back(item.first);
-            }
-            if (item.second) {
-                children.push_back(item.second);
-            }
-        }
-        break;
-    }
-    case NodeType::ARG_LIST: {
-        auto argList = static_cast<ArgListNode*>(node.get());
-        for (auto& arg : argList->arguments) {
-            // Check if this argument is a unary minus
-            if (arg->type == NodeType::UNARY_EXPR) {
-                auto unary = static_pointer_cast<UnaryExprNode>(arg);
-
-                // Only handle negative numbers specially
-                if (unary->op == "-" && unary->operand->type == NodeType::LITERAL) {
-                    // Add the minus sign as a separate terminal node
-                    auto minusNode = make_shared<TerminalNode>("-",
-                        unary->line_number, unary->column_number);
-                    children.push_back(minusNode);
-
-                    // Add the number as a separate node
-                    children.push_back(unary->operand);
+                        // Add the operand directly
+                        children.push_back(unary->operand);
+                    } else {
+                        // For other unary expressions, add normally
+                        children.push_back(elem);
+                    }
                 } else {
-                    // For other unary expressions, add normally
+                    // Regular element, add as normal
+                    children.push_back(elem);
+                }
+            }
+            break;
+    }
+
+    case NodeType::DICT_LITERAL: {
+            auto dictNode = static_cast<DictNode*>(node.get());
+
+            for (const auto& item : dictNode->items) {
+                // Process key
+                if (item.first) {
+                    if (item.first->type == NodeType::UNARY_EXPR) {
+                        auto unary = static_pointer_cast<UnaryExprNode>(item.first);
+
+                        if (unary->op == "-") {
+                            // Add minus sign
+                            auto minusNode = make_shared<TerminalNode>("-",
+                                unary->line_number, unary->column_number);
+                            children.push_back(minusNode);
+
+                            // Add the operand
+                            children.push_back(unary->operand);
+                        } else {
+                            children.push_back(item.first);
+                        }
+                    } else {
+                        children.push_back(item.first);
+                    }
+                }
+
+                // Process value
+                if (item.second) {
+                    if (item.second->type == NodeType::UNARY_EXPR) {
+                        auto unary = static_pointer_cast<UnaryExprNode>(item.second);
+
+                        if (unary->op == "-") {
+                            // Add minus sign
+                            auto minusNode = make_shared<TerminalNode>("-",
+                                unary->line_number, unary->column_number);
+                            children.push_back(minusNode);
+
+                            // Add the operand
+                            children.push_back(unary->operand);
+                        } else {
+                            children.push_back(item.second);
+                        }
+                    } else {
+                        children.push_back(item.second);
+                    }
+                }
+            }
+            break;
+    }
+
+    case NodeType::ARG_LIST: {
+            auto argList = static_cast<ArgListNode*>(node.get());
+            for (auto& arg : argList->arguments) {
+                // Check if this is a unary minus expression
+                if (arg->type == NodeType::UNARY_EXPR) {
+                    auto unary = static_pointer_cast<UnaryExprNode>(arg);
+
+                    // Handle all unary minus expressions, not just on literals
+                    if (unary->op == "-") {
+                        // Add the minus sign as a separate terminal node
+                        auto minusNode = make_shared<TerminalNode>("-",
+                            unary->line_number, unary->column_number);
+                        children.push_back(minusNode);
+
+                        // Add the operand directly
+                        children.push_back(unary->operand);
+                    } else {
+                        // For other unary expressions, add normally
+                        children.push_back(arg);
+                    }
+                } else {
+                    // Regular argument, add as normal
                     children.push_back(arg);
                 }
-            } else {
-                // Regular argument, add as normal
-                children.push_back(arg);
             }
-        }
-        break;
+            break;
     }
-    // case NodeType::ARG_LIST:
-    //     for (auto& arg : static_cast<ArgListNode*>(node.get())->arguments) {
-    //         children.push_back(arg);
-    //     }
-    //     break;
 
-    // case NodeType::PARAMETER_NODE: {
-    //     auto param = static_cast<ParameterNode*>(node.get());
-    //     if (param->default_value) {
-    //         children.push_back(param->default_value);
-    //     }
-    //     break;
-    // }
-    // case NodeType::PARAMETER_NODE: {
-    //     auto param = static_cast<ParameterNode*>(node.get());
-    //     if (param->default_value) {
-    //         // First step: Create an identifier node for the parameter name
-    //         auto idNode = make_shared<IdentifierNode>(param->name, param->line_number, param->column_number);
-    //         children.push_back(idNode);
-    //
-    //         // Second step: Create a "=" node
-    //         auto equalsNode = make_shared<TerminalNode>("=", param->line_number, param->column_number);
-    //         children.push_back(equalsNode);
-    //
-    //         // Third step: If default_value is a StatementListNode (as in your parser),
-    //         // extract the actual value from it
-    //         if (param->default_value->type == NodeType::STATEMENT_LIST) {
-    //             auto stmtList = static_cast<StatementListNode*>(param->default_value.get());
-    //             // Skip the equals node (index 0) and add the actual value (index 1)
-    //             if (stmtList->statements.size() > 1) {
-    //                 children.push_back(stmtList->statements[1]);
-    //             }
-    //         } else {
-    //             // If it's not wrapped, add it directly
-    //             children.push_back(param->default_value);
-    //         }
-    //     }
-    //     break;
-    // }
     case NodeType::PARAMETER_NODE: {
-        // auto param = static_cast<ParameterNode*>(node.get());
-        //
-        // // First child: Parameter name as identifier
-        // auto nameNode = make_shared<IdentifierNode>(param->name, param->line_number, param->column_number);
-        // children.push_back(nameNode);
-        //
-        // // If there's a default value, add equals sign and value
-        // if (param->default_value) {
-        //     // Add equals sign
-        //     auto equalsNode = make_shared<TerminalNode>("=", param->line_number, param->column_number);
-        //     children.push_back(equalsNode);
-        //
-        //     // Add the default value, bypass any StatementList wrapper
-        //     if (param->default_value->type == NodeType::STATEMENT_LIST) {
-        //         auto stmtList = static_cast<StatementListNode*>(param->default_value.get());
-        //         // Skip the equals node (index 0) and add the actual value (index 1)
-        //         if (stmtList->statements.size() > 1) {
-        //             children.push_back(stmtList->statements[1]);
-        //         }
-        //     } else {
-        //         children.push_back(param->default_value);
-        //     }
-        // }
-        // break;
         auto param = static_cast<ParameterNode*>(node.get());
 
         // If this is a comma, don't add any children
@@ -1412,15 +1035,6 @@ QString ParseTreeWidget::getNodeLabel(shared_ptr<ASTNode> node) {
         return "for-stmt";
     case NodeType::CONDITION_NODE:
         return "Condition";
-    // case NodeType::FUNC_DEF: {
-    //     auto funcDef = static_pointer_cast<FunctionDefNode>(node);
-    //     return QString("def %1").arg(funcDef->name.c_str());
-    // }
-
-    // case NodeType::FUNC_DEF: {
-    //     auto funcDef = static_pointer_cast<FunctionDefNode>(node);
-    //     return QString("def %1").arg(funcDef->name.c_str());
-    // }
     case NodeType::FUNC_DEF:
         return "Function";
     case NodeType::RETURN_STMT:
@@ -1467,9 +1081,6 @@ QString ParseTreeWidget::getNodeLabel(shared_ptr<ASTNode> node) {
     }
 
     case NodeType::PARAMETER_NODE: {
-    // auto param = static_cast<ParameterNode*>(node.get());
-    //     return param->name.data();
-
         auto param = static_cast<ParameterNode*>(node.get());
 
         // Check if this is a comma (special case in your parser)
