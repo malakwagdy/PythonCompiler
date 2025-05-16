@@ -2,7 +2,6 @@
 #include <sstream>
 #include <iostream>
 #include <iomanip>
-
 using namespace std;
 
 // Helper function to create indentation for pretty printing
@@ -54,8 +53,11 @@ string IfNode::toString(int indent) const {
     ss << getIndentation(indent + 1) << "Then:" << endl;
     ss << if_block->toString(indent + 2);
 
-    for (const auto& elif : elif_clauses) {
-        ss << elif->toString(indent + 1);
+    if (!elif_clauses.empty()) {
+        ss << getIndentation(indent + 1) << "Elif Clauses:" << endl;
+        for (const auto& elif : elif_clauses) {
+            ss << elif->toString(indent + 2);
+        }
     }
 
     if (else_block) {
@@ -230,6 +232,25 @@ string ParameterNode::toString(int indent) const {
     return ss.str();
 }
 
+// // string ParamListNode::toString(int indent) const {
+// //     stringstream ss;
+// //     ss << getIndentation(indent) << "Parameter List:" << endl;
+// //     for (const auto& param : parameters) {
+// //         ss << getIndentation(indent + 1) << param << endl;
+// //     }
+// //     return ss.str();
+// // }
+//
+// string ParamListNode::toString(int indent) const {
+//     stringstream ss;
+//     ss << getIndentation(indent) << "Parameter List:" << endl;
+//     for (const auto& param : parameters) {
+//         // Call toString on each IdentifierNode parameter
+//         ss << param->toString(indent + 1);
+//     }
+//     return ss.str();
+// }
+
 string ParamListNode::toString(int indent) const {
     stringstream ss;
     ss << getIndentation(indent) << "Parameters:" << endl;
@@ -250,6 +271,7 @@ string ArgListNode::toString(int indent) const {
     return ss.str();
 }
 
+// In parser.cpp:
 string ConditionNode::toString(int indent) const {
     stringstream ss;
     ss << getIndentation(indent) << "Condition:" << endl;
@@ -259,9 +281,63 @@ string ConditionNode::toString(int indent) const {
     return ss.str();
 }
 
+// Add this with your other toString implementations
+string TerminalNode::toString(int indent) const {
+    stringstream ss;
+    ss << getIndentation(indent) << "Terminal: " << value
+       << " (line " << line_number << ", col " << column_number << ")\n";
+    return ss.str();
+}
+
 string ErrorNode::toString(int indent) const {
     stringstream ss;
     ss << getIndentation(indent) << "ERROR (line " << line_number << "): " << message << endl;
+    return ss.str();
+}
+
+string StatementNode::toString(int indent) const {
+    stringstream ss;
+    ss << getIndentation(indent) << "Statement" << endl;
+    ss << statement->toString(indent + 1);
+    return ss.str();
+}
+string ElsePartNode::toString(int indent) const {
+    stringstream ss;
+    ss << getIndentation(indent) << "ElsePart" << endl;
+
+    for (const auto& elif : elif_clauses) {
+        ss << elif->toString(indent + 1);
+    }
+
+    if (else_block) {
+        ss << else_block->toString(indent + 1);
+    }
+
+    return ss.str();
+}
+string ExpressionNode::toString(int indent) const {
+    stringstream ss;
+    ss << getIndentation(indent) << "Expression" << endl;
+    if (expression) {
+        ss << expression->toString(indent + 1);
+    }
+    return ss.str();
+}
+
+string AssignStmtNode::toString(int indent) const {
+    stringstream ss;
+    ss << getIndentation(indent) << "AssignmentStatement" << endl;
+    if (assignment) {
+        ss << assignment->toString(indent + 1);
+    }
+    return ss.str();
+}
+string ComparisonExprNode::toString(int indent) const {
+    stringstream ss;
+    ss << getIndentation(indent) << "ComparisonExpression" << endl;
+    if (comparison) {
+        ss << comparison->toString(indent + 1);
+    }
     return ss.str();
 }
 
@@ -313,25 +389,26 @@ bool Parser::isAtEnd() {
 
 bool Parser::isAssignmentOperator(const string &lexeme) {
     return
-            lexeme == "="   ||
-            lexeme == "+="  ||
-            lexeme == "-="  ||
-            lexeme == "*="  ||
-            lexeme == "/="  ||
-            lexeme == "%="  ||
-            lexeme == "**=" ||
-            lexeme == "//=" ||
-            lexeme == "<<=" ||
-            lexeme == ">>=" ||
-            lexeme == "&="  ||
-            lexeme == "|="  ||
-            lexeme == "^=";
+        lexeme == "="   ||
+        lexeme == "+="  ||
+        lexeme == "-="  ||
+        lexeme == "*="  ||
+        lexeme == "/="  ||
+        lexeme == "%="  ||
+        lexeme == "**=" ||
+        lexeme == "//=" ||
+        lexeme == "<<=" ||
+        lexeme == ">>=" ||
+        lexeme == "&="  ||
+        lexeme == "|="  ||
+        lexeme == "^=";
 }
+
 
 void Parser::error(const string &message, int line, int column)
 {
     string error_msg = "Syntax Error at line " + to_string(line) + ", column "
-                       + to_string(column) + ": " + message;
+                            + to_string(column) + ": " + message;
     errors.push_back(error_msg);
     has_error = true;
 }
@@ -438,30 +515,33 @@ shared_ptr<ASTNode> Parser::parseStatement() {
 }
 
 shared_ptr<AssignmentNode> Parser::parseAssignment(shared_ptr<ASTNode> target) {
-    if (
-            dynamic_cast<IdentifierNode*>(target.get()) == nullptr &&
-            dynamic_cast<AttrRefNode*>(target.get()) == nullptr &&
-            dynamic_cast<SubscriptExprNode*>(target.get()) == nullptr
-            ) {
-        error("Cannot assign to expression", target->line_number, target->column_number);
-        throw runtime_error("Syntax error: invalid assignment target");
-    }
     Token op = peek();
     consume(); // Consume = operator
 
     auto value = parseExpression();
-    // you'll need an AssignmentNode constructor that also stores op.lexeme
+    // you’ll need an AssignmentNode constructor that also stores op.lexeme
     return make_shared<AssignmentNode>(target,
-                                       value,
-                                       op.lexeme,
-                                       op.line_number,
-                                       op.column_number);
+                                            value,
+                                            op.lexeme,
+                                            op.line_number,
+                                            op.column_number);
 }
 
 shared_ptr<IfNode> Parser::parseIfStatement() {
     Token if_token = consume(); // Consume 'if'
 
+    bool hasParentheses = check(LPAREN);
+    if (hasParentheses) consume(); // Consume '('
+
     auto condition = parseExpression();
+
+    if (hasParentheses) {
+        if (!check(RPAREN)) {
+            error("Expected ')' after condition", peek().line_number, peek().column_number);
+        } else {
+            consume(); // Consume ')'
+        }
+    }
 
     if (!check(SYMBOL) || peek().lexeme != ":") {
         error("Expected ':' after if condition", peek().line_number, peek().column_number);
@@ -470,9 +550,11 @@ shared_ptr<IfNode> Parser::parseIfStatement() {
     consume();
 
     auto if_block = parseBlock();
-    auto if_node = make_shared<IfNode>(condition, if_block, if_token.line_number, if_token.column_number);
-
-    // Handle any number of elif clauses
+    // auto if_node = make_shared<IfNode>(condition, if_block, if_token.line_number, if_token.column_number);
+    auto if_node = make_shared<IfNode>(
+        condition, if_block, if_token.line_number, if_token.column_number, hasParentheses);
+    // ...
+    // Process elif clauses directly into the vector
     while (check(KEYWORD) && peek().lexeme == "elif") {
         if_node->elif_clauses.push_back(parseElifClause());
     }
@@ -488,7 +570,18 @@ shared_ptr<IfNode> Parser::parseIfStatement() {
 shared_ptr<ElifNode> Parser::parseElifClause() {
     Token elif_token = consume(); // Consume 'elif'
 
+    bool hasParentheses = check(LPAREN);
+    if (hasParentheses) consume(); // Consume '('
+
     auto condition = parseExpression();
+
+    if (hasParentheses) {
+        if (!check(RPAREN)) {
+            error("Expected ')' after condition", peek().line_number, peek().column_number);
+        } else {
+            consume(); // Consume ')'
+        }
+    }
 
     if (!check(SYMBOL) || peek().lexeme != ":") {
         error("Expected ':' after if condition", peek().line_number, peek().column_number);
@@ -497,7 +590,7 @@ shared_ptr<ElifNode> Parser::parseElifClause() {
     consume();
 
     auto block = parseBlock();
-    return make_shared<ElifNode>(condition, block, elif_token.line_number, elif_token.column_number);
+    return make_shared<ElifNode>(condition, block, elif_token.line_number, elif_token.column_number, hasParentheses);
 }
 
 shared_ptr<ElseNode> Parser::parseElseClause() {
@@ -514,23 +607,51 @@ shared_ptr<ElseNode> Parser::parseElseClause() {
     return make_shared<ElseNode>(block, else_token.line_number, else_token.column_number);
 }
 
+// shared_ptr<WhileNode> Parser::parseWhileStatement() {
+//     Token while_token = consume(); // Consume 'while'
+//
+//     auto condition = parseExpression();
+//
+//     if (!check(SYMBOL) || peek().lexeme != ":") {
+//         error("Expected ':' after if condition", peek().line_number, peek().column_number);
+//         throw runtime_error("Syntax error in if statement");
+//     }
+//     consume();
+//
+//     auto block = parseBlock();
+//     return make_shared<WhileNode>(condition, block, while_token.line_number, while_token.column_number);
+// }
 shared_ptr<WhileNode> Parser::parseWhileStatement() {
     Token while_token = consume(); // Consume 'while'
 
+    bool hasParentheses = check(LPAREN);
+    if (hasParentheses) consume(); // Consume '('
+
     auto condition = parseExpression();
 
+    if (hasParentheses) {
+        if (!check(RPAREN)) {
+            error("Expected ')' after condition", peek().line_number, peek().column_number);
+        } else {
+            consume(); // Consume ')'
+        }
+    }
+
     if (!check(SYMBOL) || peek().lexeme != ":") {
-        error("Expected ':' after if condition", peek().line_number, peek().column_number);
-        throw runtime_error("Syntax error in if statement");
+        error("Expected ':' after while condition", peek().line_number, peek().column_number);
+        throw runtime_error("Syntax error in while statement");
     }
     consume();
 
     auto block = parseBlock();
-    return make_shared<WhileNode>(condition, block, while_token.line_number, while_token.column_number);
+    return make_shared<WhileNode>(condition, block, while_token.line_number, while_token.column_number, hasParentheses);
 }
 
 shared_ptr<ForNode> Parser::parseForStatement() {
     Token for_token = consume(); // Consume 'for'
+
+    bool hasParentheses = check(LPAREN);
+    if (hasParentheses) consume(); // Consume '('
 
     auto target = parseExpression();
 
@@ -538,59 +659,67 @@ shared_ptr<ForNode> Parser::parseForStatement() {
         error("Expected 'in' keyword in for loop", peek().line_number, peek().column_number);
         throw runtime_error("Syntax error in for statement");
     }
-    consume(); // Consume 'in'
+
+    // Create a terminal node for "in" keyword (we'll handle this in visualization)
+    Token in_token = consume(); // Consume 'in'
 
     auto iterable = parseExpression();
 
-    if (!check(SYMBOL) || peek().lexeme != ":") {
-        error("Expected ':' after if condition", peek().line_number, peek().column_number);
-        throw runtime_error("Syntax error in if statement");
+    if (hasParentheses) {
+        if (!check(RPAREN)) {
+            error("Expected ')' after for loop iterable", peek().line_number, peek().column_number);
+        } else {
+            consume(); // Consume ')'
+        }
     }
-    consume();
+
+    if (!check(SYMBOL) || peek().lexeme != ":") {
+        error("Expected ':' after for loop header", peek().line_number, peek().column_number);
+        throw runtime_error("Syntax error in for statement");
+    }
+    consume(); // Consume ':'
 
     auto block = parseBlock();
-    return make_shared<ForNode>(target, iterable, block, for_token.line_number, for_token.column_number);
+    return make_shared<ForNode>(target, iterable, block, for_token.line_number, for_token.column_number, hasParentheses);
 }
-
-// std::shared_ptr<FunctionDefNode> Parser::parseFunctionDef() {
-//     Token def_token = consume(); // Consume 'def'
+// shared_ptr<ForNode> Parser::parseForStatement() {
+//     Token for_token = consume(); // Consume 'for'
 //
-//     if (!check(IDENTIFIER) && !check(FUNCTION_IDENTIFIER)) {
-//         error("Expected function name after 'def'", peek().line_number, peek().column_number);
-//         throw std::runtime_error("Syntax error in function definition");
+//     auto target = parseExpression();
+//
+//     if (!check(KEYWORD) || peek().lexeme != "in") {
+//         error("Expected 'in' keyword in for loop", peek().line_number, peek().column_number);
+//         throw runtime_error("Syntax error in for statement");
 //     }
+//     consume(); // Consume 'in'
 //
-//     std::string name = consume().lexeme;
-//
-//     if (!match(LPAREN)) {
-//         error("Expected '(' after function name", peek().line_number, peek().column_number);
-//         throw std::runtime_error("Syntax error in function definition");
-//     }
-//
-//     auto params = parseParameters();
-//
-//     if (!match(RPAREN)) {
-//         error("Expected ')' after function parameters", peek().line_number, peek().column_number);
-//         throw std::runtime_error("Syntax error in function definition");
-//     }
+//     auto iterable = parseExpression();
 //
 //     if (!check(SYMBOL) || peek().lexeme != ":") {
 //         error("Expected ':' after if condition", peek().line_number, peek().column_number);
-//         throw std::runtime_error("Syntax error in if statement");
+//         throw runtime_error("Syntax error in if statement");
 //     }
 //     consume();
 //
-//     auto body = parseBlock();
-//     return std::make_shared<FunctionDefNode>(name, params, body, def_token.line_number, def_token.column_number);
+//     auto block = parseBlock();
+//     return make_shared<ForNode>(target, iterable, block, for_token.line_number, for_token.column_number);
 // }
+
 shared_ptr<FunctionDefNode> Parser::parseFunctionDef() {
-    Token def_token = consume(); // Consume 'def'
+    // Create a terminal node for the 'def' keyword
+    Token def_token = peek();
+    auto defKeyword = make_shared<TerminalNode>(def_token.lexeme, def_token.line_number, def_token.column_number);
+    consume(); // Consume 'def'
 
     // Check for function name
     if (!check(IDENTIFIER) && !check(FUNCTION_IDENTIFIER)) {
         error("Expected function name after 'def'", peek().line_number, peek().column_number);
         throw runtime_error("Syntax error in function definition");
     }
+
+    // Create a terminal node for the function name
+    Token nameToken = peek();
+    auto nameNode = make_shared<TerminalNode>(nameToken.lexeme, nameToken.line_number, nameToken.column_number);
     string name = consume().lexeme;
 
     // Check for opening parenthesis
@@ -598,6 +727,10 @@ shared_ptr<FunctionDefNode> Parser::parseFunctionDef() {
         error("Expected '(' after function name", peek().line_number, peek().column_number);
         throw runtime_error("Syntax error in function definition");
     }
+
+    // Create a terminal node for the opening parenthesis
+    Token openParen = peek();
+    auto openParenNode = make_shared<TerminalNode>(openParen.lexeme, openParen.line_number, openParen.column_number);
     consume(); // Consume '('
 
     // Parse parameter list
@@ -608,6 +741,10 @@ shared_ptr<FunctionDefNode> Parser::parseFunctionDef() {
         error("Expected ')' after function parameters", peek().line_number, peek().column_number);
         throw runtime_error("Syntax error in function definition");
     }
+
+    // Create a terminal node for the closing parenthesis
+    Token closeParen = peek();
+    auto closeParenNode = make_shared<TerminalNode>(closeParen.lexeme, closeParen.line_number, closeParen.column_number);
     consume(); // Consume ')'
 
     // Check for colon
@@ -615,12 +752,79 @@ shared_ptr<FunctionDefNode> Parser::parseFunctionDef() {
         error("Expected ':' after function parameters", peek().line_number, peek().column_number);
         throw runtime_error("Syntax error in function definition");
     }
+
+    // Create a terminal node for the colon
+    Token colon = peek();
+    auto colonNode = make_shared<TerminalNode>(colon.lexeme, colon.line_number, colon.column_number);
     consume(); // Consume ':'
 
     // Parse function body
     auto body = parseBlock();
-    return make_shared<FunctionDefNode>(name, params, body, def_token.line_number, def_token.column_number);
+
+    // Create the function definition node with the terminal nodes
+    auto funcDef = make_shared<FunctionDefNode>(name, params, body, def_token.line_number, def_token.column_number);
+    funcDef->defKeyword = defKeyword;   // Store the 'def' keyword
+    funcDef->nameNode = nameNode;       // Store the function name
+    funcDef->openParen = openParenNode;
+    funcDef->closeParen = closeParenNode;
+    funcDef->colon = colonNode;
+
+    return funcDef;
 }
+// shared_ptr<FunctionDefNode> Parser::parseFunctionDef() {
+//     Token def_token = consume(); // Consume 'def'
+//
+//     // Check for function name
+//     if (!check(IDENTIFIER) && !check(FUNCTION_IDENTIFIER)) {
+//         error("Expected function name after 'def'", peek().line_number, peek().column_number);
+//         throw runtime_error("Syntax error in function definition");
+//     }
+//     string name = consume().lexeme;
+//
+//     // Check for opening parenthesis
+//     if (!check(LPAREN)) {
+//         error("Expected '(' after function name", peek().line_number, peek().column_number);
+//         throw runtime_error("Syntax error in function definition");
+//     }
+//
+//     // Create a terminal node for the opening parenthesis
+//     Token openParen = consume(); // Consume '('
+//     auto openParenNode = make_shared<TerminalNode>(openParen.lexeme, openParen.line_number, openParen.column_number);
+//
+//     // Parse parameter list
+//     auto params = parseParameters();
+//
+//     // Check for closing parenthesis
+//     if (!check(RPAREN)) {
+//         error("Expected ')' after function parameters", peek().line_number, peek().column_number);
+//         throw runtime_error("Syntax error in function definition");
+//     }
+//
+//     // Create a terminal node for the closing parenthesis
+//     Token closeParen = consume(); // Consume ')'
+//     auto closeParenNode = make_shared<TerminalNode>(closeParen.lexeme, closeParen.line_number, closeParen.column_number);
+//
+//     // Check for colon
+//     if (!check(SYMBOL) || peek().lexeme != ":") {
+//         error("Expected ':' after function parameters", peek().line_number, peek().column_number);
+//         throw runtime_error("Syntax error in function definition");
+//     }
+//
+//     // Create a terminal node for the colon
+//     Token colon = consume(); // Consume ':'
+//     auto colonNode = make_shared<TerminalNode>(colon.lexeme, colon.line_number, colon.column_number);
+//
+//     // Parse function body
+//     auto body = parseBlock();
+//
+//     // Create the function definition node with the terminal nodes
+//     auto funcDef = make_shared<FunctionDefNode>(name, params, body, def_token.line_number, def_token.column_number);
+//     funcDef->openParen = openParenNode;
+//     funcDef->closeParen = closeParenNode;
+//     funcDef->colon = colonNode;
+//
+//     return funcDef;
+// }
 
 shared_ptr<ReturnNode> Parser::parseReturnStatement() {
     Token return_token = consume(); // Consume 'return'
@@ -707,26 +911,13 @@ shared_ptr<ASTNode> Parser::parseAndExpr() {
     return left;
 }
 
-// std::shared_ptr<ASTNode> Parser::parseNotExpr() {
-//     if (check(KEYWORD) && peek().lexeme == "not") {
-//         Token op = consume(); // Consume 'not'
-//
-//         // Parse the operand at the comparison level
-//         auto operand = parseComparisonExpr();
-//
-//         return std::make_shared<UnaryExprNode>("not", operand, op.line_number, op.column_number);
-//     }
-//
-//     return parseComparisonExpr();
-// }
-
 shared_ptr<ASTNode> Parser::parseNotExpr() {
     // Special handling for 'not' keyword
     if (check(KEYWORD) && peek().lexeme == "not") {
         Token op = consume(); // Consume 'not'
 
         // DEBUG
-        // std::cout << "Processing NOT operator at line " << op.line_number << ", column " << op.column_number << std::endl;
+        // cout << "Processing NOT operator at line " << op.line_number << ", column " << op.column_number << endl;
 
         // Parse the expression that follows the 'not'
         auto operand = parseComparisonExpr();
@@ -742,13 +933,18 @@ shared_ptr<ASTNode> Parser::parseComparisonExpr() {
 
     // Handle comparison operators: ==, !=, <, >, <=, >=
     if (check(OPERATOR) && (
-            peek().lexeme == "==" || peek().lexeme == "!=" ||
-            peek().lexeme == "<" || peek().lexeme == ">" ||
-            peek().lexeme == "<=" || peek().lexeme == ">=")) {
+        peek().lexeme == "==" || peek().lexeme == "!=" ||
+        peek().lexeme == "<" || peek().lexeme == ">" ||
+        peek().lexeme == "<=" || peek().lexeme == ">=")) {
 
         Token op = consume();
         auto right = parseArithmeticExpr();
-        left = make_shared<BinaryExprNode>(op.lexeme, left, right, op.line_number, op.column_number);
+        // left = make_shared<BinaryExprNode>(op.lexeme, left, right, op.line_number, op.column_number);
+        // Create a BinaryExprNode first
+        auto binary = make_shared<BinaryExprNode>(op.lexeme, left, right, op.line_number, op.column_number);
+
+        // Wrap it in a ComparisonExprNode
+        return make_shared<ComparisonExprNode>(binary);
     }
 
     return left;
@@ -772,7 +968,7 @@ shared_ptr<ASTNode> Parser::parseTerm() {
 
     // Handle multiplication, division, and modulo
     while (check(OPERATOR) && (
-            peek().lexeme == "*" || peek().lexeme == "/" || peek().lexeme == "%")) {
+        peek().lexeme == "*" || peek().lexeme == "/" || peek().lexeme == "%")) {
 
         Token op = consume();
         auto right = parseFactor();
@@ -799,28 +995,46 @@ shared_ptr<ASTNode> Parser::parsePower() {
     return parseUnary();
 }
 
+// shared_ptr<ASTNode> Parser::parseUnary() {
+//     // Handle unary operators: +, -
+//     if (check(OPERATOR) && (peek().lexeme == "+" || peek().lexeme == "-")) {
+//         Token op = consume();
+//         auto operand = parseUnary();
+//         return make_shared<UnaryExprNode>(op.lexeme, operand, op.line_number, op.column_number);
+//     }
+//
+//     return parsePrimary();
+// }
 shared_ptr<ASTNode> Parser::parseUnary() {
     // Handle unary operators: +, -
     if (check(OPERATOR) && (peek().lexeme == "+" || peek().lexeme == "-")) {
         Token op = consume();
+
+        // NEW: Check if the next token is also a unary operator
+        if (check(OPERATOR) && (peek().lexeme == "+" || peek().lexeme == "-")) {
+            // This is an error - adjacent unary operators without parentheses
+            error("Invalid syntax: adjacent unary operators are not allowed without parentheses",
+                  peek().line_number, peek().column_number);
+            throw runtime_error("Syntax error in expression");
+        }
+
         auto operand = parseUnary();
         return make_shared<UnaryExprNode>(op.lexeme, operand, op.line_number, op.column_number);
     }
 
     return parsePrimary();
 }
-
 //remove these two functions later
 void Parser::debugToken(const string& context) {
     if (isAtEnd()) {
-        std::cout << context << ": At end of token stream" << std::endl;
+        cout << context << ": At end of token stream" << endl;
         return;
     }
 
-    std::cout << context << ": Token = " << peek().lexeme
+    cout << context << ": Token = " << peek().lexeme
               << ", Type = " << tokenTypeToString(peek().type)
               << ", Line " << peek().line_number
-              << ", Column " << peek().column_number << std::endl;
+              << ", Column " << peek().column_number << endl;
 }
 
 string Parser::tokenTypeToString(TokenType type) {
@@ -830,18 +1044,18 @@ string Parser::tokenTypeToString(TokenType type) {
         case RBRACE: return "RBRACE";
         case LBRACKET: return "LBRACKET";
         case RBRACKET: return "RBRACKET";
-            // Add other token types as needed
+        // Add other token types as needed
         default: return "OTHER";
     }
 }
 
 shared_ptr<ASTNode> Parser::parsePrimary() {
-    // Add debug at the start to see what token we're starting with
+    // Debug at the start to see what token we're starting with
     debugToken("parsePrimary start");
 
     // Skip any INDENT/DEDENT tokens that appear in expressions
     while (check(INDENT) || check(DEDENT)) {
-        std::cout << "Skipping INDENT/DEDENT in primary expression" << std::endl;
+        cout << "Skipping INDENT/DEDENT in primary expression" << endl;
         consume();
     }
 
@@ -862,20 +1076,6 @@ shared_ptr<ASTNode> Parser::parsePrimary() {
         if (check(LPAREN)) {
             return parseCall(node);
         }
-        // Handle parenthesized expressions
-        // if (check(LPAREN)) {
-        //     consume(); // Consume '('
-        //
-        //     // This is the key part - parse the full expression
-        //     auto expr = parseExpression();
-        //
-        //     if (!match(RPAREN)) {
-        //         error("Expected ')' after expression", peek().line_number, peek().column_number);
-        //         throw std::runtime_error("Syntax error in parenthesized expression");
-        //     }
-        //     consume();
-        //     return expr;
-        // }
 
         // NEW: Check for built-in functions that should be called with parentheses
         if (isBuiltInFunction(id.lexeme) && (check(STRING) || check(IDENTIFIER) || check(NUMERIC))) {
@@ -922,15 +1122,27 @@ shared_ptr<ASTNode> Parser::parsePrimary() {
 
     // Handle parenthesized expressions
     if (check(LPAREN)) {
-        consume(); // Consume '('
+        // Create a terminal node for the opening parenthesis
+        Token openParen = consume();
+        auto openParenNode = make_shared<TerminalNode>(openParen.lexeme, openParen.line_number, openParen.column_number);
+
         auto expr = parseExpression();
 
-        if (!match(RPAREN)) {
+        // Create a terminal node for the closing parenthesis
+        if (!check(RPAREN)) {
             error("Expected ')' after expression", peek().line_number, peek().column_number);
             throw runtime_error("Syntax error in parenthesized expression");
         }
+        Token closeParen = consume();
+        auto closeParenNode = make_shared<TerminalNode>(closeParen.lexeme, closeParen.line_number, closeParen.column_number);
 
-        return expr;
+        // Create a container node for the parenthesized expression
+        auto container = make_shared<StatementListNode>();
+        container->statements.push_back(openParenNode);
+        container->statements.push_back(expr);
+        container->statements.push_back(closeParenNode);
+
+        return container;
     }
 
     // Handle list literals
@@ -938,10 +1150,6 @@ shared_ptr<ASTNode> Parser::parsePrimary() {
         return parseListLiteral();
     }
 
-    // // Handle dictionary literals
-    // if (check(LBRACE)) {
-    //     return parseDictLiteral();
-    // }
     // Add final debug before error
     debugToken("No valid expression found");
 
@@ -975,56 +1183,6 @@ shared_ptr<ASTNode> Parser::parseAttributeReference(shared_ptr<ASTNode> object) 
     return attr_ref;
 }
 
-// std::shared_ptr<ASTNode> Parser::parseAttributeReference(std::shared_ptr<ASTNode> object) {
-//     consume(); // Consume '.'
-//
-//     // Be more flexible with what we accept as an attribute name
-//     // Check for both IDENTIFIER and FUNCTION_IDENTIFIER
-//     if (!check(IDENTIFIER) && !check(FUNCTION_IDENTIFIER)) {
-//         error("Expected attribute name after '.'", peek().line_number, peek().column_number);
-//         throw std::runtime_error("Syntax error in attribute reference");
-//     }
-//
-//     Token attr = consume();
-//     auto attr_ref = std::make_shared<AttrRefNode>(object, attr.lexeme, attr.line_number, attr.column_number);
-//
-//     // Handle chained attribute access: obj.attr1.attr2
-//     if (check(OPERATOR) && peek().lexeme == ".") {
-//         return parseAttributeReference(attr_ref);
-//     }
-//
-//     // Handle method calls: obj.method()
-//     if (check(LPAREN)) {
-//         return parseCall(attr_ref);
-//     }
-//
-//     return attr_ref;
-// }
-
-// std::shared_ptr<ASTNode> Parser::parseAttributeReference(std::shared_ptr<ASTNode> object) {
-//     consume(); // Consume '.'
-//
-//     if (!check(IDENTIFIER)) {
-//         error("Expected attribute name after '.'", peek().line_number, peek().column_number);
-//         throw std::runtime_error("Syntax error in attribute reference");
-//     }
-//
-//     Token attr = consume();
-//     auto attr_ref = std::make_shared<AttrRefNode>(object, attr.lexeme, attr.line_number, attr.column_number);
-//
-//     // Handle chained attribute access: obj.attr1.attr2
-//     if (check(OPERATOR) && peek().lexeme == ".") {
-//         return parseAttributeReference(attr_ref);
-//     }
-//
-//     // Handle method calls: obj.method()
-//     if (check(LPAREN)) {
-//         return parseCall(attr_ref);
-//     }
-//
-//     return attr_ref;
-// }
-
 shared_ptr<ASTNode> Parser::parseSubscript(shared_ptr<ASTNode> container) {
     Token bracket = consume(); // Consume '['
 
@@ -1050,34 +1208,13 @@ shared_ptr<ASTNode> Parser::parseSubscript(shared_ptr<ASTNode> container) {
     return subscript;
 }
 
-// std::shared_ptr<ASTNode> Parser::parseCall(std::shared_ptr<ASTNode> function) {
-//     Token paren = consume(); // Consume '('
-//
-//     auto args = parseArguments();
-//
-//     if (!match(RPAREN)) {
-//         error("Expected ')' after function arguments", peek().line_number, peek().column_number);
-//         throw std::runtime_error("Syntax error in function call");
-//     }
-//
-//     auto call = std::make_shared<CallExprNode>(function, args, paren.line_number, paren.column_number);
-//
-//     // Handle method chaining: obj.method1().method2()
-//     if (check(OPERATOR) && peek().lexeme == ".") {
-//         return parseAttributeReference(call);
-//     }
-//
-//     // Handle subscripting after call: func()[i]
-//     if (check(LBRACKET)) {
-//         return parseSubscript(call);
-//     }
-//
-//     return call;
-// }
-shared_ptr<ASTNode> Parser::parseCall(shared_ptr<ASTNode> function) {
-    Token paren = consume(); // Consume '('
 
-    // If there are no arguments (empty parentheses)
+shared_ptr<ASTNode> Parser::parseCall(shared_ptr<ASTNode> function) {
+    // Create a terminal node for the opening parenthesis
+    Token openParen = consume(); // Consume '('
+    auto openParenNode = make_shared<TerminalNode>(openParen.lexeme, openParen.line_number, openParen.column_number);
+
+    // Parse arguments (without including the parentheses)
     auto args = make_shared<ArgListNode>();
 
     if (!check(RPAREN)) {
@@ -1086,7 +1223,11 @@ shared_ptr<ASTNode> Parser::parseCall(shared_ptr<ASTNode> function) {
 
         // Parse additional arguments if there are commas
         while (check(SYMBOL) && peek().lexeme == ",") {
-            consume(); // Consume the comma
+            // Create a terminal node for the comma
+            Token comma = consume(); // Consume the comma
+            auto commaNode = make_shared<TerminalNode>(comma.lexeme, comma.line_number, comma.column_number);
+            args->arguments.push_back(commaNode);
+
             args->arguments.push_back(parseExpression());
         }
     }
@@ -1097,26 +1238,20 @@ shared_ptr<ASTNode> Parser::parseCall(shared_ptr<ASTNode> function) {
         throw runtime_error("Syntax error in function call");
     }
 
-    consume(); // Consume ')'
+    // Create a terminal node for the closing parenthesis
+    Token closeParen = consume(); // Consume ')'
+    auto closeParenNode = make_shared<TerminalNode>(closeParen.lexeme, closeParen.line_number, closeParen.column_number);
 
-    return make_shared<CallExprNode>(function, args, paren.line_number, paren.column_number);
+    // Create the call node with function, args, and both parentheses nodes
+    auto call = make_shared<CallExprNode>(function, args, openParen.line_number, openParen.column_number);
+
+    // Add the call node structure information to allow proper visualization
+    call->openParen = openParenNode;
+    call->closeParen = closeParenNode;
+
+    return call;
 }
 
-// std::shared_ptr<ArgListNode> Parser::parseArguments() {
-//     auto arg_list = std::make_shared<ArgListNode>();
-//
-//     if (!check(RPAREN)) {
-//         // Parse first argument
-//         arg_list->arguments.push_back(parseExpression());
-//
-//         // Parse remaining arguments
-//         while (match(SYMBOL) && peek().lexeme == ",") {
-//             arg_list->arguments.push_back(parseExpression());
-//         }
-//     }
-//
-//     return arg_list;
-// }
 
 shared_ptr<ArgListNode> Parser::parseArguments() {
     auto arg_list = make_shared<ArgListNode>();
@@ -1136,93 +1271,6 @@ shared_ptr<ArgListNode> Parser::parseArguments() {
     return arg_list;
 }
 
-// std::shared_ptr<ParamListNode> Parser::parseParameters() {
-//     auto param_list = std::make_shared<ParamListNode>();
-//
-//     // If we're not immediately at the closing parenthesis, then parse parameters
-//     if (!check(RPAREN)) {
-//         // Parse first parameter
-//         if (!check(IDENTIFIER)) {
-//             error("Expected parameter name", peek().line_number, peek().column_number);
-//             throw std::runtime_error("Syntax error in parameter list");
-//         }
-//
-//         // Add first parameter
-//         param_list->parameters.push_back(consume().lexeme);
-//
-//         // Parse remaining parameters
-//         while (check(SYMBOL) && peek().lexeme == ",") {
-//             consume(); // Explicitly consume the comma
-//
-//             if (!check(IDENTIFIER)) {
-//                 error("Expected parameter name after comma", peek().line_number, peek().column_number);
-//                 throw std::runtime_error("Syntax error in parameter list");
-//             }
-//
-//             param_list->parameters.push_back(consume().lexeme);
-//         }
-//     }
-//
-//     return param_list;
-// }
-
-// std::shared_ptr<ParamListNode> Parser::parseParameters() {
-//     auto param_list = std::make_shared<ParamListNode>();
-//
-//     // If we're not immediately at the closing parenthesis, then parse parameters
-//     if (!check(RPAREN)) {
-//         // Parse first parameter
-//         if (!check(IDENTIFIER)) {
-//             error("Expected parameter name", peek().line_number, peek().column_number);
-//             throw std::runtime_error("Syntax error in parameter list");
-//         }
-//
-//         // Create an IdentifierNode for the parameter
-//         Token param_token = consume();
-//         auto param = std::make_shared<IdentifierNode>(param_token.lexeme,
-//                                             param_token.line_number,
-//                                             param_token.column_number);
-//
-//         // Check for default value (=)
-//         if (check(OPERATOR) && peek().lexeme == "=") {
-//             consume(); // Consume the equals sign
-//
-//             // Parse the default value expression and ignore it for now
-//             // We're just recognizing it syntactically without storing it in the AST
-//             parseExpression();
-//         }
-//
-//         param_list->parameters.push_back(param);
-//
-//         // Parse remaining parameters
-//         while (check(SYMBOL) && peek().lexeme == ",") {
-//             consume(); // Explicitly consume the comma
-//
-//             if (!check(IDENTIFIER)) {
-//                 error("Expected parameter name after comma", peek().line_number, peek().column_number);
-//                 throw std::runtime_error("Syntax error in parameter list");
-//             }
-//
-//             // Create an IdentifierNode for each parameter
-//             param_token = consume();
-//             param = std::make_shared<IdentifierNode>(param_token.lexeme,
-//                                                 param_token.line_number,
-//                                                 param_token.column_number);
-//
-//             // Check for default value (=)
-//             if (check(OPERATOR) && peek().lexeme == "=") {
-//                 consume(); // Consume the equals sign
-//
-//                 // Parse the default value expression and ignore it for now
-//                 parseExpression();
-//             }
-//
-//             param_list->parameters.push_back(param);
-//         }
-//     }
-//
-//     return param_list;
-// }
 
 shared_ptr<ParamListNode> Parser::parseParameters() {
     auto param_list = make_shared<ParamListNode>();
@@ -1241,24 +1289,41 @@ shared_ptr<ParamListNode> Parser::parseParameters() {
 
         // Check for default value (=)
         if (check(OPERATOR) && peek().lexeme == "=") {
-            consume(); // Consume the equals sign
+            // Create a terminal node for the equals sign
+            Token equals = consume(); // Consume the equals sign
+            auto equalsNode = make_shared<TerminalNode>(equals.lexeme, equals.line_number, equals.column_number);
+
             // Parse and store the default value expression
             default_value = parseExpression();
+
+            // Create a statement list to hold the equals and the default value
+            auto defaultContainer = make_shared<StatementListNode>();
+            defaultContainer->statements.push_back(equalsNode);
+            defaultContainer->statements.push_back(default_value);
+            default_value = defaultContainer;
         }
 
         // Create a ParameterNode for the parameter
         auto param = make_shared<ParameterNode>(
-                param_token.lexeme,
-                default_value,
-                param_token.line_number,
-                param_token.column_number
+            param_token.lexeme,
+            default_value,
+            param_token.line_number,
+            param_token.column_number
         );
 
         param_list->parameters.push_back(param);
 
         // Parse remaining parameters
         while (check(SYMBOL) && peek().lexeme == ",") {
-            consume(); // Explicitly consume the comma
+            // Create a terminal node for the comma
+            Token comma = consume(); // Explicitly consume the comma
+            auto commaNode = make_shared<TerminalNode>(comma.lexeme, comma.line_number, comma.column_number);
+
+            // Store the comma as a parameter with empty name
+            auto commaParam = make_shared<ParameterNode>(
+                ",", nullptr, comma.line_number, comma.column_number
+            );
+            param_list->parameters.push_back(commaParam);
 
             if (!check(IDENTIFIER)) {
                 error("Expected parameter name after comma", peek().line_number, peek().column_number);
@@ -1271,17 +1336,26 @@ shared_ptr<ParamListNode> Parser::parseParameters() {
 
             // Check for default value (=)
             if (check(OPERATOR) && peek().lexeme == "=") {
-                consume(); // Consume the equals sign
+                // Create a terminal node for the equals sign
+                Token equals = consume(); // Consume the equals sign
+                auto equalsNode = make_shared<TerminalNode>(equals.lexeme, equals.line_number, equals.column_number);
+
                 // Parse and store the default value expression
                 default_value = parseExpression();
+
+                // Create a statement list to hold the equals and the default value
+                auto defaultContainer = make_shared<StatementListNode>();
+                defaultContainer->statements.push_back(equalsNode);
+                defaultContainer->statements.push_back(default_value);
+                default_value = defaultContainer;
             }
 
             // Create a ParameterNode for each parameter
             auto param = make_shared<ParameterNode>(
-                    param_token.lexeme,
-                    default_value,
-                    param_token.line_number,
-                    param_token.column_number
+                param_token.lexeme,
+                default_value,
+                param_token.line_number,
+                param_token.column_number
             );
 
             param_list->parameters.push_back(param);
@@ -1291,37 +1365,16 @@ shared_ptr<ParamListNode> Parser::parseParameters() {
     return param_list;
 }
 
-// std::shared_ptr<ListNode> Parser::parseListLiteral() {
-//     Token bracket = consume(); // Consume '['
-//     auto list = std::make_shared<ListNode>(bracket.line_number, bracket.column_number);
-//
-//     if (!check(RBRACKET)) {
-//         // Parse first element
-//         list->elements.push_back(parseExpression());
-//
-//         // Parse remaining elements
-//         while (check(SYMBOL) && peek().lexeme == ",") {
-//             consume(); // Explicitly consume the comma
-//
-//             // If there's a trailing comma followed by closing bracket, break
-//             if (check(RBRACKET)) {
-//                 break;
-//             }
-//
-//             list->elements.push_back(parseExpression());
-//         }
-//     }
-//
-//     if (!match(RBRACKET)) {
-//         error("Expected ']' after list elements", peek().line_number, peek().column_number);
-//         throw std::runtime_error("Syntax error in list literal");
-//     }
-//
-//     return list;
-// }
+
 shared_ptr<ListNode> Parser::parseListLiteral() {
-    Token bracket = consume(); // Consume '['
-    auto list = make_shared<ListNode>(bracket.line_number, bracket.column_number);
+    // Create a terminal node for the opening bracket
+    Token openBracket = consume(); // Consume '['
+    auto openBracketNode = make_shared<TerminalNode>(openBracket.lexeme, openBracket.line_number, openBracket.column_number);
+
+    auto list = make_shared<ListNode>(openBracket.line_number, openBracket.column_number);
+
+    // Add the opening bracket to the list
+    list->elements.push_back(openBracketNode);
 
     // Skip any INDENT tokens within the list
     while (check(INDENT)) {
@@ -1340,7 +1393,10 @@ shared_ptr<ListNode> Parser::parseListLiteral() {
             }
 
             if (check(SYMBOL) && peek().lexeme == ",") {
-                consume(); // Consume the comma
+                // Create a terminal node for the comma
+                Token comma = consume(); // Consume the comma
+                auto commaNode = make_shared<TerminalNode>(comma.lexeme, comma.line_number, comma.column_number);
+                list->elements.push_back(commaNode);
 
                 // Skip any INDENT/DEDENT tokens after comma
                 while (check(INDENT) || check(DEDENT)) {
@@ -1366,28 +1422,44 @@ shared_ptr<ListNode> Parser::parseListLiteral() {
         error("Expected ']' after list elements", peek().line_number, peek().column_number);
         throw runtime_error("Syntax error in list literal");
     }
-    consume(); // Consume the closing bracket
+
+    // Create a terminal node for the closing bracket
+    Token closeBracket = consume(); // Consume the closing bracket
+    auto closeBracketNode = make_shared<TerminalNode>(closeBracket.lexeme, closeBracket.line_number, closeBracket.column_number);
+    list->elements.push_back(closeBracketNode);
 
     return list;
 }
 
-shared_ptr<DictNode> Parser::parseDictLiteral() {
-    std::cout << "Entering parseDictLiteral with token: " << peek().lexeme
-              << " at line " << peek().line_number
-              << ", column " << peek().column_number << std::endl;
 
-    Token brace = consume(); // Consume '{'
-    auto dict = make_shared<DictNode>(brace.line_number, brace.column_number);
+shared_ptr<DictNode> Parser::parseDictLiteral() {
+    cout << "Entering parseDictLiteral with token: " << peek().lexeme
+              << " at line " << peek().line_number
+              << ", column " << peek().column_number << endl;
+
+    // Create a terminal node for the opening brace
+    Token openBrace = consume(); // Consume '{'
+    auto openBraceNode = make_shared<TerminalNode>(openBrace.lexeme, openBrace.line_number, openBrace.column_number);
+
+    auto dict = make_shared<DictNode>(openBrace.line_number, openBrace.column_number);
+
+    // Store opening brace as the first item (key with null value)
+    dict->items.emplace_back(openBraceNode, nullptr);
 
     // Skip any INDENT tokens that appear within the dictionary
     while (check(INDENT)) {
-        std::cout << "Skipping INDENT in dictionary" << std::endl;
+        cout << "Skipping INDENT in dictionary" << endl;
         consume(); // Skip the INDENT token
     }
 
     // Check if we have an empty dictionary {}
     if (check(RBRACE)) {
-        consume(); // Consume the closing brace
+        // Create a terminal node for the closing brace
+        Token closeBrace = consume(); // Consume the closing brace
+        auto closeBraceNode = make_shared<TerminalNode>(closeBrace.lexeme, closeBrace.line_number, closeBrace.column_number);
+
+        // Store closing brace (null key with value)
+        dict->items.emplace_back(nullptr, closeBraceNode);
         return dict;
     }
 
@@ -1396,7 +1468,7 @@ shared_ptr<DictNode> Parser::parseDictLiteral() {
 
     // Skip any DEDENT tokens that might appear between key and colon
     while (check(DEDENT)) {
-        std::cout << "Skipping DEDENT after key" << std::endl;
+        cout << "Skipping DEDENT after key" << endl;
         consume();
     }
 
@@ -1404,26 +1476,35 @@ shared_ptr<DictNode> Parser::parseDictLiteral() {
         error("Expected ':' after dictionary key", peek().line_number, peek().column_number);
         throw runtime_error("Syntax error in dictionary literal");
     }
-    consume(); // Consume the colon
+
+    // Create a terminal node for the colon
+    Token colon = consume(); // Consume the colon
+    auto colonNode = make_shared<TerminalNode>(colon.lexeme, colon.line_number, colon.column_number);
+
+    // Store the key:colon pair
+    dict->items.emplace_back(key, colonNode);
 
     auto value = parseExpression();
-    dict->items.emplace_back(key, value);
+    dict->items.emplace_back(nullptr, value);
 
     // Parse remaining key-value pairs
     while (true) {
         // Skip any INDENT/DEDENT tokens between items
         while (check(INDENT) || check(DEDENT)) {
-            std::cout << "Skipping INDENT/DEDENT between dict items" << std::endl;
+            cout << "Skipping INDENT/DEDENT between dict items" << endl;
             consume();
         }
 
         // Check for comma to continue or closing brace to end
         if (check(SYMBOL) && peek().lexeme == ",") {
-            consume(); // Consume the comma
+            // Create a terminal node for the comma
+            Token comma = consume(); // Consume the comma
+            auto commaNode = make_shared<TerminalNode>(comma.lexeme, comma.line_number, comma.column_number);
+            dict->items.emplace_back(nullptr, commaNode);
 
             // Skip any INDENT/DEDENT that might follow the comma
             while (check(INDENT) || check(DEDENT)) {
-                std::cout << "Skipping INDENT/DEDENT after comma" << std::endl;
+                cout << "Skipping INDENT/DEDENT after comma" << endl;
                 consume();
             }
 
@@ -1436,7 +1517,7 @@ shared_ptr<DictNode> Parser::parseDictLiteral() {
 
             // Skip any INDENT/DEDENT between key and colon
             while (check(INDENT) || check(DEDENT)) {
-                std::cout << "Skipping INDENT/DEDENT between key and colon" << std::endl;
+                cout << "Skipping INDENT/DEDENT between key and colon" << endl;
                 consume();
             }
 
@@ -1444,10 +1525,16 @@ shared_ptr<DictNode> Parser::parseDictLiteral() {
                 error("Expected ':' after dictionary key", peek().line_number, peek().column_number);
                 throw runtime_error("Syntax error in dictionary literal");
             }
-            consume(); // Consume the colon
+
+            // Create a terminal node for the colon
+            Token colon = consume(); // Consume the colon
+            auto colonNode = make_shared<TerminalNode>(colon.lexeme, colon.line_number, colon.column_number);
+
+            // Store the key:colon pair
+            dict->items.emplace_back(key, colonNode);
 
             value = parseExpression();
-            dict->items.emplace_back(key, value);
+            dict->items.emplace_back(nullptr, value);
         } else if (check(RBRACE)) {
             break; // End of dictionary
         } else {
@@ -1456,90 +1543,36 @@ shared_ptr<DictNode> Parser::parseDictLiteral() {
         }
     }
 
-    consume(); // Consume the closing brace
+    // Create a terminal node for the closing brace
+    Token closeBrace = consume(); // Consume the closing brace
+    auto closeBraceNode = make_shared<TerminalNode>(closeBrace.lexeme, closeBrace.line_number, closeBrace.column_number);
+    dict->items.emplace_back(nullptr, closeBraceNode);
+
     return dict;
 }
-// std::shared_ptr<DictNode> Parser::parseDictLiteral() {
-//     // Add debug output to trace what's happening
-//     std::cout << "Entering parseDictLiteral with token: " << peek().lexeme
-//               << " at line " << peek().line_number
-//               << ", column " << peek().column_number << std::endl;
-//
-//     Token brace = consume(); // Consume '{'
-//     auto dict = std::make_shared<DictNode>(brace.line_number, brace.column_number);
-//
-//     // Check if we have an empty dictionary {}
-//     if (check(RBRACE)) {
-//         consume(); // Consume the closing brace
-//         return dict;
-//     }
-//
-//     // Parse first key-value pair
-//     auto key = parseExpression();
-//
-//     if (!check(SYMBOL) || peek().lexeme != ":") {
-//         error("Expected ':' after dictionary key", peek().line_number, peek().column_number);
-//         throw std::runtime_error("Syntax error in dictionary literal");
-//     }
-//     consume(); // Consume the colon
-//
-//     auto value = parseExpression();
-//     dict->items.emplace_back(key, value);
-//
-//     // Parse remaining key-value pairs
-//     while (check(SYMBOL) && peek().lexeme == ",") {
-//         consume(); // Consume the comma
-//
-//         // Handle trailing comma
-//         if (check(RBRACE)) {
-//             break;
-//         }
-//
-//         key = parseExpression();
-//
-//         if (!check(SYMBOL) || peek().lexeme != ":") {
-//             error("Expected ':' after dictionary key", peek().line_number, peek().column_number);
-//             throw std::runtime_error("Syntax error in dictionary literal");
-//         }
-//         consume(); // Consume the colon
-//
-//         value = parseExpression();
-//         dict->items.emplace_back(key, value);
-//     }
-//
-//     if (!check(RBRACE)) {
-//         error("Expected '}' after dictionary items", peek().line_number, peek().column_number);
-//         throw std::runtime_error("Syntax error in dictionary literal");
-//     }
-//     consume(); // Consume the closing brace
-//
-//     return dict;
-// }
 
 void Parser::printParseTree(shared_ptr<ASTNode> root, int indent) {
-    std::cout << root->toString(indent);
+    cout << root->toString(indent);
 }
 
 void Parser::printErrors() {
     if (!errors.empty()) {
-        std::cout << "\n--- Parse Errors ---\n";
+        cout << "\n--- Parse Errors ---\n";
         for (const auto& error : errors) {
-            std::cout << error << std::endl;
+            cout << error << endl;
         }
-        std::cout << "Total errors: " << errors.size() << std::endl;
+        cout << "Total errors: " << errors.size() << endl;
     }
 }
 
 bool Parser::isBuiltInFunction(const string& name) {
     // List of common built-in functions in Python
     static const vector<string> builtins = {"print", "input",  "len",      "range",
-                                            "str",   "int",    "float",    "list",
-                                            "dict",  "set",    "tuple",    "sum",
-                                            "min",   "max",    "abs",      "all",
-                                            "any",   "sorted", "reversed", "enumerate",
-                                            "zip",   "open",   "type"};
+                                                      "str",   "int",    "float",    "list",
+                                                      "dict",  "set",    "tuple",    "sum",
+                                                      "min",   "max",    "abs",      "all",
+                                                      "any",   "sorted", "reversed", "enumerate",
+                                                      "zip",   "open",   "type"};
 
     return find(builtins.begin(), builtins.end(), name) != builtins.end();
 }
-
-
