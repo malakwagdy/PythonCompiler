@@ -11,6 +11,7 @@ bool isComparisonOperator(const string& op) {
            op == "is" || op == "is not";
 }
 
+
 ParseTreeWidget::ParseTreeWidget(QWidget *parent) :
     QWidget(parent), scale(0.4), offset(0, 0), isDragging(false) {  // Even more zoomed out for taller tree
     // Enable mouse tracking for drag operations
@@ -287,11 +288,26 @@ vector<shared_ptr<ASTNode>> ParseTreeWidget::getNodeChildren(shared_ptr<ASTNode>
         children.push_back(expNode);
         break;
     }
-
     case NodeType::EXPRESSION: {
         auto expNode = static_cast<ExpressionNode*>(node.get());
 
-        // Check if this expression contains a binary expression
+        // First check for unary minus on a literal number (negative number special case)
+        if (expNode->expression->type == NodeType::UNARY_EXPR) {
+            auto unary = static_pointer_cast<UnaryExprNode>(expNode->expression);
+
+            if (unary->op == "-" && unary->operand->type == NodeType::LITERAL) {
+                // Add the minus sign as a separate terminal node
+                auto minusNode = make_shared<TerminalNode>("-",
+                    unary->line_number, unary->column_number);
+                children.push_back(minusNode);
+
+                // Add the number as a separate node
+                children.push_back(unary->operand);
+                break;  // Important: exit the case here
+            }
+        }
+
+        // Existing code for binary expressions and other types
         if (expNode->expression->type == NodeType::BINARY_EXPR) {
             auto binary = static_cast<BinaryExprNode*>(expNode->expression.get());
 
@@ -319,11 +335,48 @@ vector<shared_ptr<ASTNode>> ParseTreeWidget::getNodeChildren(shared_ptr<ASTNode>
                 children.push_back(binary->right);
             }
         } else {
-            // For non-binary expressions, just add the expression directly (same as current code)
+            // For non-binary and non-unary-minus expressions, just add directly
             children.push_back(expNode->expression);
         }
         break;
     }
+
+    // case NodeType::EXPRESSION: {
+    //     auto expNode = static_cast<ExpressionNode*>(node.get());
+    //
+    //     // Check if this expression contains a binary expression
+    //     if (expNode->expression->type == NodeType::BINARY_EXPR) {
+    //         auto binary = static_cast<BinaryExprNode*>(expNode->expression.get());
+    //
+    //         // Check if left side is also a binary expression
+    //         if (binary->left->type == NodeType::BINARY_EXPR) {
+    //             // Wrap the left binary expression in an ExpressionNode to maintain hierarchy
+    //             auto leftExpNode = make_shared<ExpressionNode>(binary->left);
+    //             children.push_back(leftExpNode);
+    //         } else {
+    //             // Add left operand directly (same as current code)
+    //             children.push_back(binary->left);
+    //         }
+    //
+    //         // Add the operator as a terminal node (same as current code)
+    //         auto opNode = make_shared<TerminalNode>(binary->op, binary->line_number, binary->column_number);
+    //         children.push_back(opNode);
+    //
+    //         // Check if right side is also a binary expression
+    //         if (binary->right->type == NodeType::BINARY_EXPR) {
+    //             // Wrap the right binary expression in an ExpressionNode to maintain hierarchy
+    //             auto rightExpNode = make_shared<ExpressionNode>(binary->right);
+    //             children.push_back(rightExpNode);
+    //         } else {
+    //             // Add right operand directly (same as current code)
+    //             children.push_back(binary->right);
+    //         }
+    //     } else {
+    //         // For non-binary expressions, just add the expression directly (same as current code)
+    //         children.push_back(expNode->expression);
+    //     }
+    //     break;
+    // }
 
         // Add this case for expression nodes
     // case NodeType::EXPRESSION: {
@@ -332,6 +385,22 @@ vector<shared_ptr<ASTNode>> ParseTreeWidget::getNodeChildren(shared_ptr<ASTNode>
     // break;
     // }
         // Add this case after the EXPRESSION case
+    // case NodeType::COMPARISON_WRAPPER: {
+    //     auto compWrapper = static_cast<ComparisonExprNode*>(node.get());
+    //     auto binaryNode = static_pointer_cast<BinaryExprNode>(compWrapper->comparison);
+    //
+    //     // Add left operand
+    //     children.push_back(binaryNode->left);
+    //
+    //     // Add operator as a terminal node
+    //     auto opNode = make_shared<TerminalNode>(binaryNode->op, binaryNode->line_number, binaryNode->column_number);
+    //     children.push_back(opNode);
+    //
+    //     // Add right operand
+    //     children.push_back(binaryNode->right);
+    //     break;
+    // }
+
     case NodeType::COMPARISON_WRAPPER: {
         auto compWrapper = static_cast<ComparisonExprNode*>(node.get());
         auto binaryNode = static_pointer_cast<BinaryExprNode>(compWrapper->comparison);
@@ -343,10 +412,18 @@ vector<shared_ptr<ASTNode>> ParseTreeWidget::getNodeChildren(shared_ptr<ASTNode>
         auto opNode = make_shared<TerminalNode>(binaryNode->op, binaryNode->line_number, binaryNode->column_number);
         children.push_back(opNode);
 
-        // Add right operand
-        children.push_back(binaryNode->right);
+        // Check if right side is a binary expression
+        if (binaryNode->right->type == NodeType::BINARY_EXPR) {
+            // Wrap the right binary expression in an ExpressionNode
+            auto rightExpNode = make_shared<ExpressionNode>(binaryNode->right);
+            children.push_back(rightExpNode);
+        } else {
+            // For non-binary expressions, add directly
+            children.push_back(binaryNode->right);
+        }
         break;
     }
+
     // case NodeType::STATEMENT: {
     // auto stmtNode = static_cast<StatementNode*>(node.get());
     // children.push_back(stmtNode->statement);
@@ -989,16 +1066,48 @@ vector<shared_ptr<ASTNode>> ParseTreeWidget::getNodeChildren(shared_ptr<ASTNode>
     //     break;
     // }
 
+    // case NodeType::CALL_EXPR: {
+    //     auto call = static_cast<CallExprNode*>(node.get());
+    //     // Changed order: Function first, then open parenthesis
+    //     children.push_back(call->function);
+    //     if (call->openParen) {
+    //         children.push_back(call->openParen);
+    //     }
+    //     // Then arguments
+    //     children.push_back(call->arguments);
+    //     // Then close parenthesis
+    //     if (call->closeParen) {
+    //         children.push_back(call->closeParen);
+    //     }
+    //     break;
+    // }
     case NodeType::CALL_EXPR: {
         auto call = static_cast<CallExprNode*>(node.get());
-        // Changed order: Function first, then open parenthesis
-        children.push_back(call->function);
+
+        // Check if the function is an attribute reference (method call)
+        if (call->function->type == NodeType::ATTR_REF) {
+            auto attrRef = static_pointer_cast<AttrRefNode>(call->function);
+
+            // Add the object directly (e.g., "results")
+            children.push_back(attrRef->object);
+
+            // Add the attribute as a terminal node (e.g., ".append")
+            auto methodNode = make_shared<TerminalNode>("." + attrRef->attribute,
+                call->line_number, call->column_number);
+            children.push_back(methodNode);
+        }
+        else {
+            // For regular function calls (not methods), add the function directly
+            children.push_back(call->function);
+        }
+
+        // Then continue with parentheses and arguments as before
         if (call->openParen) {
             children.push_back(call->openParen);
         }
-        // Then arguments
+        // Arguments
         children.push_back(call->arguments);
-        // Then close parenthesis
+        // Close parenthesis
         if (call->closeParen) {
             children.push_back(call->closeParen);
         }
@@ -1043,12 +1152,38 @@ vector<shared_ptr<ASTNode>> ParseTreeWidget::getNodeChildren(shared_ptr<ASTNode>
         }
         break;
     }
+    case NodeType::ARG_LIST: {
+        auto argList = static_cast<ArgListNode*>(node.get());
+        for (auto& arg : argList->arguments) {
+            // Check if this argument is a unary minus
+            if (arg->type == NodeType::UNARY_EXPR) {
+                auto unary = static_pointer_cast<UnaryExprNode>(arg);
 
-    case NodeType::ARG_LIST:
-        for (auto& arg : static_cast<ArgListNode*>(node.get())->arguments) {
-            children.push_back(arg);
+                // Only handle negative numbers specially
+                if (unary->op == "-" && unary->operand->type == NodeType::LITERAL) {
+                    // Add the minus sign as a separate terminal node
+                    auto minusNode = make_shared<TerminalNode>("-",
+                        unary->line_number, unary->column_number);
+                    children.push_back(minusNode);
+
+                    // Add the number as a separate node
+                    children.push_back(unary->operand);
+                } else {
+                    // For other unary expressions, add normally
+                    children.push_back(arg);
+                }
+            } else {
+                // Regular argument, add as normal
+                children.push_back(arg);
+            }
         }
         break;
+    }
+    // case NodeType::ARG_LIST:
+    //     for (auto& arg : static_cast<ArgListNode*>(node.get())->arguments) {
+    //         children.push_back(arg);
+    //     }
+    //     break;
 
     // case NodeType::PARAMETER_NODE: {
     //     auto param = static_cast<ParameterNode*>(node.get());
