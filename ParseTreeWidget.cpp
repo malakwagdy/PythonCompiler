@@ -1,3 +1,5 @@
+// ParseTreeWidget.cpp
+
 #include "ParseTreeWidget.h"
 #include <QFontMetrics>
 #include <algorithm>
