@@ -145,24 +145,10 @@ public:
          : ASTNode(NodeType::IF_STMT, line, col), condition(cond), if_block(block),
            else_block(nullptr), hasParentheses(parentheses) {}
 
-    // IfNode(shared_ptr<ASTNode> cond, shared_ptr<ASTNode> block, int line, int col)
-    //     : ASTNode(NodeType::IF_STMT, line, col), condition(cond), if_block(block), else_block(nullptr) {}
-    // IfNode(shared_ptr<ASTNode> cond, shared_ptr<ASTNode> block, int line, int col)
-    //     : ASTNode(NodeType::IF_STMT, line, col), condition(cond), if_block(block) {}
     string toString(int indent = 0) const override;
 };
 
-// Elif clause
-// class ElifNode : public ASTNode {
-// public:
-//     shared_ptr<ASTNode> condition;
-//     shared_ptr<ASTNode> block;
-//
-//     ElifNode(shared_ptr<ASTNode> cond, shared_ptr<ASTNode> b, int line, int col)
-//         : ASTNode(NodeType::ELIF_CLAUSE, line, col), condition(cond), block(b) {}
-//     string toString(int indent = 0) const override;
-// };
-// Add to the ElifNode class in parser.h
+
 class ElifNode : public ASTNode {
 public:
     shared_ptr<ASTNode> condition;
@@ -204,8 +190,6 @@ public:
     shared_ptr<ASTNode> block;
     bool hasParentheses;
 
-    // WhileNode(shared_ptr<ASTNode> cond, shared_ptr<ASTNode> b, int line, int col)
-    //     : ASTNode(NodeType::WHILE_STMT, line, col), condition(cond), block(b) {}
     WhileNode(shared_ptr<ASTNode> condition, shared_ptr<BlockNode> block,
               int line_number, int column_number, bool hasParentheses = false)
         : ASTNode(NodeType::WHILE_STMT, line_number, column_number),
@@ -229,30 +213,8 @@ public:
           target(target), iterable(iterable), block(block), hasParentheses(hasParentheses) {}
 
 
-    // ForNode(shared_ptr<ASTNode> t, shared_ptr<ASTNode> iter, shared_ptr<ASTNode> b, int line, int col)
-    //     : ASTNode(NodeType::FOR_STMT, line, col), target(t), iterable(iter), block(b) {}
     string toString(int indent = 0) const override;
 };
-
-// Function definition
-// class FunctionDefNode : public ASTNode {
-// public:
-//     string name;
-//     shared_ptr<ASTNode> params;
-//     shared_ptr<ASTNode> body;
-//
-//     // Add these fields for the parentheses
-//     shared_ptr<ASTNode> openParen;
-//     shared_ptr<ASTNode> closeParen;
-//     shared_ptr<ASTNode> colon;  // Also add the colon
-//
-//     FunctionDefNode(const string& n, shared_ptr<ASTNode> p, shared_ptr<ASTNode> b,
-//                    int line, int col)
-//         : ASTNode(NodeType::FUNC_DEF, line, col), name(n), params(p), body(b),
-//           openParen(nullptr), closeParen(nullptr), colon(nullptr) {}
-//
-//     string toString(int indent = 0) const override;
-// };
 
 // Function definition
 class FunctionDefNode : public ASTNode {
