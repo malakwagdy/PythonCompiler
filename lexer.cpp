@@ -461,7 +461,7 @@ void Lexer::tokenizeWord(const string &word, int start_column)
             }
             else {
                 buffer.emplace_back(token, NUMERIC, line_number, token_start_col);
-                addToSymbolTable(token, "Numeric");
+                // addToSymbolTable(token, "Numeric");
             }
         }
         // === Integer ===
@@ -478,7 +478,7 @@ void Lexer::tokenizeWord(const string &word, int start_column)
             }
             else {
                 buffer.emplace_back(token, NUMERIC, line_number, token_start_col);
-                addToSymbolTable(token, "Numeric");
+                // addToSymbolTable(token, "Numeric");
             }
         }
         // === Valid Identifier ===
