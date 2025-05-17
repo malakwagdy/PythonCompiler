@@ -393,18 +393,55 @@ vector<shared_ptr<ASTNode>> ParseTreeWidget::getNodeChildren(shared_ptr<ASTNode>
         break;
     }
 
+    // case NodeType::COMPARISON_WRAPPER: {
+    //     auto compWrapper = static_cast<ComparisonExprNode*>(node.get());
+    //     auto binaryNode = static_pointer_cast<BinaryExprNode>(compWrapper->comparison);
+    //
+    //     // Add left operand
+    //     children.push_back(binaryNode->left);
+    //
+    //     // Add operator as a terminal node
+    //     auto opNode = make_shared<TerminalNode>(binaryNode->op, binaryNode->line_number, binaryNode->column_number);
+    //     children.push_back(opNode);
+    //
+    //     // Check if right side is a binary expression
+    //     if (binaryNode->right->type == NodeType::BINARY_EXPR) {
+    //         // Wrap the right binary expression in an ExpressionNode
+    //         auto rightExpNode = make_shared<ExpressionNode>(binaryNode->right);
+    //         children.push_back(rightExpNode);
+    //     } else {
+    //         // For non-binary expressions, add directly
+    //         children.push_back(binaryNode->right);
+    //     }
+    //     break;
+    // }
     case NodeType::COMPARISON_WRAPPER: {
         auto compWrapper = static_cast<ComparisonExprNode*>(node.get());
         auto binaryNode = static_pointer_cast<BinaryExprNode>(compWrapper->comparison);
 
-        // Add left operand
-        children.push_back(binaryNode->left);
+        // Check if left side is itself a binary expression
+        if (binaryNode->left->type == NodeType::BINARY_EXPR) {
+            auto leftBinary = static_pointer_cast<BinaryExprNode>(binaryNode->left);
 
-        // Add operator as a terminal node
+            // Add left operand of nested binary expression
+            children.push_back(leftBinary->left);
+
+            // Add the operator of nested binary expression as a terminal node
+            auto leftOpNode = make_shared<TerminalNode>(leftBinary->op, leftBinary->line_number, leftBinary->column_number);
+            children.push_back(leftOpNode);
+
+            // Add right operand of nested binary expression
+            children.push_back(leftBinary->right);
+        } else {
+            // Add left operand directly (keep your existing code)
+            children.push_back(binaryNode->left);
+        }
+
+        // Add the comparison operator (keep your existing code)
         auto opNode = make_shared<TerminalNode>(binaryNode->op, binaryNode->line_number, binaryNode->column_number);
         children.push_back(opNode);
 
-        // Check if right side is a binary expression
+        // Keep your existing right-side handling
         if (binaryNode->right->type == NodeType::BINARY_EXPR) {
             // Wrap the right binary expression in an ExpressionNode
             auto rightExpNode = make_shared<ExpressionNode>(binaryNode->right);
@@ -413,6 +450,7 @@ vector<shared_ptr<ASTNode>> ParseTreeWidget::getNodeChildren(shared_ptr<ASTNode>
             // For non-binary expressions, add directly
             children.push_back(binaryNode->right);
         }
+
         break;
     }
 
