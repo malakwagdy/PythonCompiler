@@ -43,7 +43,7 @@ A Python compiler built with C++ and the Qt framework, providing a feature-rich 
 
 The main window is split into two primary sections: the **Source Code Editor** on the left and the **Compiler Output** on the right, which is organized into clear tabs for easy analysis.
 
-![GUI Screenshot](https://raw.githubusercontent.com/malakwagdy/PythonCompiler/PythonCompilerGUI.png)
+![GUI Screenshot](https://github.com/malakwagdy/PythonCompiler/blob/main/PythonCompilerGUI.png)
 
 ---
 
