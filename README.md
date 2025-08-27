@@ -1,7 +1,5 @@
 # Python Compiler
 
-![Project Banner](https://via.placeholder.com/728x150.png?text=Python+Compiler+in+C%2B%2B+and+Qt)
-
 A Python compiler built with C++ and the Qt framework, providing a feature-rich graphical interface to demonstrate the core stages of compilation. This application allows users to write code, run lexical and syntactical analysis, and view detailed outputs like tokens, errors, and the parse tree.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -20,6 +18,7 @@ A Python compiler built with C++ and the Qt framework, providing a feature-rich 
     -   [Building from Source](#building-from-source)
 -   [How to Use](#-how-to-use)
 -   [Contributing](#-contributing)
+-   [License](#-license)
 -   [Acknowledgments](#-acknowledgments)
 
 ---
@@ -130,6 +129,12 @@ Contributions, issues, and feature requests are welcome!
 3.  **Commit** your changes (`git commit -m 'Add some NewFeature'`).
 4.  **Push** to the branch (`git push origin feature/NewFeature`).
 5.  Open a **Pull Request**.
+
+---
+
+## 📜 License
+
+This project is distributed under the MIT License. See `LICENSE.md` for more information.
 
 ---
 
